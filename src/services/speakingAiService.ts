@@ -1,4 +1,24 @@
-import type { SpeakingCoachResponse } from '../../server/speakingCoach';
+export interface SpeakingCoachResponse {
+  feedback: {
+    clarity: number;
+    vocabulary: number;
+    grammar: number;
+    fluency: number;
+    overall: number;
+    praise: string;
+    oneFix: string;
+    nextStep: string;
+    newPhrases: string[];
+  };
+  reply: string;
+  replyVi: string;
+  correction?: {
+    original: string;
+    improved: string;
+    explanationVi: string;
+  };
+}
+
 import type { GradeLevel } from '../types/contentArchitecture';
 import type { SpeakingMode, SpeakingScenario, SpeakingTurn } from '../types/speakingRoom';
 
