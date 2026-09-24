@@ -2,7 +2,7 @@ name: Build and typecheck
 
 on:
   push:
-    branches: ["main", "feat/ai-speaking-room"]
+    branches: ["main", "feat/ai-speaking-room", "feat/ui-auth-curriculum-2026"]
   pull_request:
     branches: ["main"]
 
@@ -15,6 +15,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install
       - run: npm run lint
       - run: npm run build

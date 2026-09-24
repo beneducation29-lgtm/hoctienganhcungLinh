@@ -11,7 +11,8 @@ import {
   Flame,
   Award,
   LogOut,
-  Languages
+  Languages,
+  LogIn
 } from 'lucide-react';
 import { ActiveTab, Notification, StudentProfile } from '../types';
 
@@ -21,6 +22,8 @@ interface HeaderProps {
   student: StudentProfile;
   notifications: Notification[];
   onOpenSearch: () => void;
+  onOpenLogin: () => void;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -28,7 +31,9 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   student,
   notifications,
-  onOpenSearch
+  onOpenSearch,
+  onOpenLogin,
+  onLogout
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -36,17 +41,28 @@ export const Header: React.FC<HeaderProps> = ({
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const navItems: { id: ActiveTab; label: string }[] = [
-    { id: 'home', label: 'Trang chủ' },
-    { id: 'curriculum', label: 'Chương trình học' },
-    { id: 'vocabulary', label: 'Từ vựng (Vocab)' },
-    { id: 'grammar', label: 'Ngữ pháp' },
-    { id: 'review', label: 'Ôn tập' },
-    { id: 'skills', label: '4 kỹ năng' },
-    { id: 'speaking', label: 'Phòng luyện nói AI' },
-    { id: 'aitutor', label: 'AI Tutor' },
-    { id: 'progress', label: 'Tiến độ' }
+  const navGroups: Array<{ label: string; items: { id: ActiveTab; label: string }[] }> = [
+    { label: 'Học tập', items: [
+      { id: 'curriculum', label: 'Chương trình học' },
+      { id: 'vocabulary', label: 'Từ vựng' },
+      { id: 'grammar', label: 'Ngữ pháp' }
+    ]},
+    { label: 'Luyện tập', items: [
+      { id: 'review', label: 'Ôn tập' },
+      { id: 'skills', label: '4 kỹ năng' },
+      { id: 'speaking', label: 'Phòng luyện nói AI' }
+    ]},
+    { label: 'AI & Tiến độ', items: [
+      { id: 'aitutor', label: 'AI Tutor' },
+      { id: 'progress', label: 'Tiến độ' }
+    ]}
   ];
+
+  const navigate = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all">
@@ -75,33 +91,24 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
+          {/* Desktop Navigation: grouped dropdowns */}
+          <nav className="hidden lg:flex items-center gap-1">
+            <button onClick={() => navigate('home')} className={`px-3.5 py-2 text-sm font-medium rounded-lg cursor-pointer ${activeTab === 'home' ? 'text-blue-600 bg-blue-50/60' : 'text-slate-600 hover:bg-slate-50'}`}>Trang chủ</button>
+            {navGroups.map((group) => {
+              const active = group.items.some((item) => item.id === activeTab);
               return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={`px-3.5 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap relative cursor-pointer ${
-                    isActive
-                      ? 'text-blue-600 font-semibold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  {item.label}
-                  {item.id === 'aitutor' && (
-                    <span className="ml-1 px-1.5 py-0.2 text-[9px] font-bold bg-blue-100 text-blue-700 rounded">
-                      NEW
-                    </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-blue-600 rounded-full" />
-                  )}
-                </button>
+                <div key={group.label} className="relative group">
+                  <button className={`px-3.5 py-2 text-sm font-medium rounded-lg flex items-center gap-1 cursor-pointer ${active ? 'text-blue-600 bg-blue-50/60' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    {group.label}<ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="absolute left-0 top-full pt-2 invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-all z-50">
+                    <div className="w-56 rounded-2xl border border-slate-200 bg-white shadow-xl p-1.5">
+                      {group.items.map((item) => (
+                        <button key={item.id} onClick={() => navigate(item.id)} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm cursor-pointer ${activeTab === item.id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'}`}>{item.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </nav>
@@ -168,6 +175,10 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <button
                 onClick={() => {
+                  if (!student.email) {
+                    onOpenLogin();
+                    return;
+                  }
                   setShowProfileMenu(!showProfileMenu);
                   setShowNotifications(false);
                 }}
@@ -184,15 +195,15 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                   />
                   <div className="w-full h-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                    MT
+                    {student.email ? student.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() : <LogIn className="w-4 h-4" />}
                   </div>
                 </div>
                 <div className="hidden md:flex flex-col text-left">
-                  <span className="text-xs font-semibold text-slate-900 leading-tight truncate max-w-[120px]">
-                    {student.name}
+                  <span className="text-xs font-semibold text-slate-900 leading-tight truncate max-w-[140px]">
+                    {student.email ? student.name : 'Đăng nhập Google'}
                   </span>
                   <span className="text-[11px] text-blue-600 font-bold leading-tight flex items-center gap-1">
-                    Trình độ {student.englishLevel} · Lớp {student.currentGrade}
+                    {student.email || 'Cá nhân hóa hồ sơ học tập'}
                   </span>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden md:block" />
@@ -201,7 +212,8 @@ export const Header: React.FC<HeaderProps> = ({
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="px-2 py-2 border-b border-slate-100">
-                    <p className="text-sm font-semibold text-slate-900">{student.name}</p>
+                    <p className="text-sm font-semibold text-slate-900">{student.email ? student.name : 'Đăng nhập Google'}</p>
+                    {student.email && <p className="text-[11px] text-slate-500 mt-0.5 truncate">{student.email}</p>}
                     <p className="text-xs text-slate-500 mt-0.5">{student.school}</p>
                     <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                       <span className="flex items-center gap-1 text-amber-600 font-medium">
@@ -238,11 +250,11 @@ export const Header: React.FC<HeaderProps> = ({
 
                   <div className="pt-2 border-t border-slate-100">
                     <button
-                      onClick={() => setShowProfileMenu(false)}
+                      onClick={() => { setShowProfileMenu(false); onLogout(); }}
                       className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <LogOut className="w-3.5 h-3.5" />
-                      <span>Đăng xuất (Demo)</span>
+                      <span>Đăng xuất</span>
                     </button>
                   </div>
                 </div>
@@ -266,7 +278,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3 animate-in fade-in duration-150">
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl mb-3">
             <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center shrink-0">
-              MT
+              {student.email ? student.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() : <LogIn className="w-4 h-4" />}
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-900">{student.name}</p>
@@ -275,35 +287,17 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="space-y-1">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-left transition-colors cursor-pointer ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-700 font-semibold'
-                      : 'text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {isActive && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
-                </button>
-              );
-            })}
+            <button onClick={() => navigate('home')} className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-left hover:bg-slate-100 cursor-pointer">
+              <span>Trang chủ</span>{activeTab === 'home' && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+            </button>
+            {navGroups.map((group) => (
+              <div key={group.label} className="border-t border-slate-100 pt-1">
+                <div className="px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">{group.label}</div>
+                {group.items.map((item) => (
+                  <button key={item.id} onClick={() => navigate(item.id)} className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium text-left cursor-pointer ${activeTab === item.id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100'}`}>
+                    <span>{item.label}</span>{activeTab === item.id && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+                  </button>
+                ))}
+              </div>
+            ))}
           </div>
-
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Chuỗi streak: <strong className="text-amber-600">{student.streakDays} ngày</strong></span>
-            <span>Mục tiêu CEFR: <strong className="text-blue-600">{student.targetLevel}</strong></span>
-          </div>
-        </div>
-      )}
-    </header>
-  );
-};
