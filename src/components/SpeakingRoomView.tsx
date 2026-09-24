@@ -1,4 +1,3 @@
-import avatarUrl from './speaking/aiSpeakingAvatar.svg';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import avatarUrl from './speaking/aiSpeakingAvatar.svg';
 import {
@@ -23,6 +22,7 @@ import {
   getSpeakingScenarios,
   speakingLevelProfiles
 } from '../services/speakingRoomService';
+import { coachSpeakingWithGemini } from '../services/speakingAiService';
 
 interface SpeakingRoomViewProps {
   initialGrade?: GradeLevel;
@@ -163,6 +163,7 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
       });
 
       setFeedback(aiResult.feedback);
+      speak(aiResult.reply);
       setTurns((prev) => prev.concat([
         {
           id: 'student-' + Date.now(),
