@@ -29,7 +29,7 @@ import { LessonModal } from './components/LessonModal';
 import { SkillModal } from './components/SkillModal';
 import { FlashcardModal } from './components/FlashcardModal';
 import { SearchModal } from './components/SearchModal';
-import { FaqModal } from './components/FaqModal';
+import { FaqModal } from './components/FaqModal';\nimport { GoogleLoginModal } from './components/GoogleLoginModal';\nimport type { GoogleProfile } from './components/GoogleLoginModal';
 
 import {
   initialStudentProfile,
@@ -50,8 +50,8 @@ import {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-  const [student, setStudent] = useState(initialStudentProfile);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [student, setStudent] = useState(() => {\n    try {\n      const saved = localStorage.getItem('english-platform-google-profile');\n      return saved ? { ...initialStudentProfile, ...JSON.parse(saved) } : initialStudentProfile;\n    } catch {\n      return initialStudentProfile;\n    }\n  });
+  const [notifications, setNotifications] = useState(mockNotifications);\n  const [showLogin, setShowLogin] = useState(false);
 
   // Active Quiz Engine session
   const [activeQuizSession, setActiveQuizSession] = useState<QuizSession | null>(null);
@@ -174,6 +174,8 @@ export default function App() {
         student={student}
         notifications={notifications}
         onOpenSearch={() => setShowSearch(true)}
+        onOpenLogin={() => setShowLogin(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -363,7 +365,12 @@ export default function App() {
       )}
 
       {faqModalType && (
-        <FaqModal
+        <GoogleLoginModal
+        open={showLogin}
+        onClose={() => setShowLogin(false)}
+        onLogin={handleGoogleLogin}
+      />
+      <FaqModal
           type={faqModalType}
           onClose={() => setFaqModalType(null)}
         />
