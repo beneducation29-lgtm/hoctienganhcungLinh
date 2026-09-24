@@ -2,9 +2,9 @@ name: Build and typecheck
 
 on:
   push:
-    branches: ["main", "feat/ai-speaking-room"]
+    branches: ["main", "feat/ai-speaking-room", "feat/reading-listening-lab", "feat/writing-lab-ai-coach"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "feat/ai-speaking-room", "feat/reading-listening-lab", "feat/writing-lab-ai-coach"]
 
 jobs:
   build:
