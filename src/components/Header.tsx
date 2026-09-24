@@ -272,7 +272,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3 animate-in fade-in duration-150">
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl mb-3">
             <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center shrink-0">
-              MT
+              {student.email ? student.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() : <LogIn className="w-4 h-4" />}
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-900">{student.name}</p>
