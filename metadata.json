@@ -1,0 +1,6 @@
+{
+  "name": "EduTHPT - Nền Tảng Học Tập THPT Việt Nam",
+  "description": "Nền tảng học tập dành cho học sinh THPT — bám sát chương trình sách giáo khoa Lớp 10, 11, 12 và rèn luyện 4 kỹ năng.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
