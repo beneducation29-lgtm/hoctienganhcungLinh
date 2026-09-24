@@ -213,7 +213,8 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-3 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="px-2 py-2 border-b border-slate-100">
                     <p className="text-sm font-semibold text-slate-900">{student.email ? student.name : 'Đăng nhập Google'}</p>
-                    {student.email && <p className="text-[11px] text-slate-500 mt-0.5 truncate">{student.email}</p>}\n                    <p className="text-xs text-slate-500 mt-0.5">{student.school}</p>
+                    {student.email && <p className="text-[11px] text-slate-500 mt-0.5 truncate">{student.email}</p>}
+                    <p className="text-xs text-slate-500 mt-0.5">{student.school}</p>
                     <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                       <span className="flex items-center gap-1 text-amber-600 font-medium">
                         <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
