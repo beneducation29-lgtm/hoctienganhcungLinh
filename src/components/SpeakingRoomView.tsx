@@ -141,29 +141,69 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
     setIsListening(false);
   };
 
-  const submitAnswer = () => {
-    if (!scenario || !transcript.trim()) return;
-    const result = evaluateSpeaking(transcript, scenario, profile);
-    setFeedback(result);
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [aiError, setAiError] = useState('');
 
-    const nextAiText = createAiReply(scenario, grade, result);
-    setTurns((prev) => prev.concat([
-      {
-        id: 'student-' + Date.now(),
-        speaker: 'student',
-        text: transcript.trim(),
-        timestamp: 'Vừa xong',
-        feedback: result
-      },
-      {
-        id: 'ai-' + (Date.now() + 1),
-        speaker: 'ai',
-        text: nextAiText,
-        translation: scenario.followUpQuestions[0],
-        timestamp: 'Vừa xong'
-      }
-    ]));
-    setTranscript('');
+  const submitAnswer = async () => {
+    if (!scenario || !transcript.trim() || isAiThinking) return;
+
+    const studentText = transcript.trim();
+    setIsAiThinking(true);
+    setAiError('');
+
+    try {
+      const aiResult = await coachSpeakingWithGemini({
+        grade,
+        cefr: profile.cefr,
+        mode,
+        scenario,
+        transcript: studentText,
+        recentTurns: turns
+      });
+
+      setFeedback(aiResult.feedback);
+      setTurns((prev) => prev.concat([
+        {
+          id: 'student-' + Date.now(),
+          speaker: 'student',
+          text: studentText,
+          timestamp: 'Vừa xong',
+          feedback: aiResult.feedback
+        },
+        {
+          id: 'ai-' + (Date.now() + 1),
+          speaker: 'ai',
+          text: aiResult.reply,
+          translation: aiResult.replyVi,
+          timestamp: 'Vừa xong'
+        }
+      ]));
+      setTranscript('');
+    } catch (error) {
+      console.error(error);
+      setAiError('AI đang bận một chút. Mình vẫn luyện được nhé — phản hồi cơ bản đã sẵn sàng.');
+      const result = evaluateSpeaking(studentText, scenario, profile);
+      setFeedback(result);
+      setTurns((prev) => prev.concat([
+        {
+          id: 'student-' + Date.now(),
+          speaker: 'student',
+          text: studentText,
+          timestamp: 'Vừa xong',
+          feedback: result
+        },
+        {
+          id: 'ai-' + (Date.now() + 1),
+          speaker: 'ai',
+          text: createAiReply(scenario, grade, result),
+          translation: scenario.followUpQuestions[0],
+          timestamp: 'Vừa xong'
+        }
+      ]));
+      setTranscript('');
+    } finally {
+      setIsAiThinking(false);
+    }
   };
 
   const resetRoom = () => {
@@ -307,7 +347,7 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
                     ))}
                   </div>
 
-                  <textarea
+                  {aiError && (\n                    <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">{aiError}</div>\n                  )}\n\n                  <textarea
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
                     rows={3}
@@ -328,7 +368,7 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
                     </button>
                     <button
                       onClick={submitAnswer}
-                      disabled={!transcript.trim()}
+                      disabled={!transcript.trim() || isAiThinking}
                       className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-40 text-white px-4 py-3 text-sm font-bold cursor-pointer disabled:cursor-not-allowed"
                     >
                       Gửi câu trả lời
