@@ -1,4 +1,3 @@
-import avatarUrl from './speaking/aiSpeakingAvatar.svg';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import avatarUrl from './speaking/aiSpeakingAvatar.svg';
 import {
@@ -16,8 +15,8 @@ import {
 } from 'lucide-react';
 import type { GradeLevel } from '../types/contentArchitecture';
 import type { SpeakingFeedback, SpeakingMode, SpeakingTurn } from '../types/speakingRoom';
+import { coachSpeakingWithGemini } from '../services/speakingAiService';
 import {
-  coachSpeakingWithGemini,
   createAiReply,
   evaluateSpeaking,
   getScenarioById,
