@@ -374,13 +374,14 @@ export default function App() {
         />
       )}
 
-      {faqModalType && (
-        <GoogleLoginModal
+      <GoogleLoginModal
         open={showLogin}
         onClose={() => setShowLogin(false)}
         onLogin={handleGoogleLogin}
       />
-      <FaqModal
+
+      {faqModalType && (
+        <FaqModal
           type={faqModalType}
           onClose={() => setFaqModalType(null)}
         />
