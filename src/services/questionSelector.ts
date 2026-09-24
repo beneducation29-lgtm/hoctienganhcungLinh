@@ -8,10 +8,10 @@
 
 import { UniversalQuestion } from '../types/quiz';
 import { GradeLevel, SkillCategory, StandardDifficulty, CEFRLevel } from '../types/contentArchitecture';
-import { comprehensiveQuestionBank } from '../data/mockQuestionBank';
+import { comprehensiveQuestionBank } from '../data/mockQuestionBank';\nimport { curriculumExpansionQuestions2026 } from '../data/curriculumExpansion2026';
 
 export class QuestionSelector {
-  private bank: UniversalQuestion[] = comprehensiveQuestionBank;
+  private bank: UniversalQuestion[] = [...comprehensiveQuestionBank, ...curriculumExpansionQuestions2026.map((q) => ({\n    ...q,\n    type: q.type as UniversalQuestion['type'],\n    correctAnswer: q.correctAnswer\n  }))];
 
   /**
    * Get all questions in the bank
