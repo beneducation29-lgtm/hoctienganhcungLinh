@@ -19,6 +19,7 @@ import { GrammarLabView } from './components/grammar/GrammarLabView';
 import { SpeakingRoomView } from './components/SpeakingRoomView';
 import { ReadingLabView } from './components/reading/ReadingLabView';
 import { ListeningLabView } from './components/listening/ListeningLabView';
+import { WritingLabView } from './components/writing/WritingLabView';
 
 // Unified Quiz Engine
 import { QuizEngine } from './components/quiz/QuizEngine';
@@ -141,7 +142,7 @@ export default function App() {
 
   const handleOpenSkillRoom = (skillId: SkillType, level?: SkillLevel) => {
     const matchedSkill = fourSkillModules.find((s) => s.id === skillId);
-    if (skillId === 'speaking' || skillId === 'reading' || skillId === 'listening') {
+    if (skillId === 'speaking' || skillId === 'reading' || skillId === 'listening' || skillId === 'writing') {
       setActiveTab(skillId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -294,6 +295,10 @@ export default function App() {
 
             {activeTab === 'listening' && (
               <ListeningLabView initialGrade={student.currentGrade} onStartQuizPractice={handleStartQuizPractice} />
+            )}
+
+            {activeTab === 'writing' && (
+              <WritingLabView initialGrade={student.currentGrade} />
             )}
 
             {activeTab === 'skills' && (
