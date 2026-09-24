@@ -16,6 +16,7 @@ export type ActiveTab =
   | 'review'
   | 'skills'
   | 'aitutor'
+  | 'speaking'
   | 'progress';
 
 export type UnitModuleType =
