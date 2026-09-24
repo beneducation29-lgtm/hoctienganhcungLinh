@@ -53,10 +53,22 @@ class ContentService {
   private curriculum: Curriculum = mockCurriculum;
   private textbooks: Textbook[] = mockTextbooks;
   private grades: GradeModel[] = mockGrades;
-  private units: Record<string, UnitModel> = {\n    ...mockUnits,\n    ...Object.fromEntries(curriculumExpansionUnits2026.map((u) => [u.id, u]))\n  };
-  private lessons: Record<string, LessonModel> = {\n    ...mockLessons,\n    ...Object.fromEntries(curriculumExpansionLessons2026.map((l) => [l.id, l]))\n  };
+  private units: Record<string, UnitModel> = {
+    ...mockUnits,
+    ...Object.fromEntries(curriculumExpansionUnits2026.map((u) => [u.id, u]))
+  };
+  private lessons: Record<string, LessonModel> = {
+    ...mockLessons,
+    ...Object.fromEntries(curriculumExpansionLessons2026.map((l) => [l.id, l]))
+  };
   private questions: QuestionBankItem[] = [...mockQuestionBank, ...curriculumExpansionQuestions2026];
-  private vocabularyMap: Record<string, VocabularyItem[]> = {\n    ...mockVocabularyItems,\n    ...curriculumExpansionVocabulary2026.reduce<Record<string, VocabularyItem[]>>((acc, item) => {\n      (acc[item.lessonId] ||= []).push(item);\n      return acc;\n    }, {})\n  };
+  private vocabularyMap: Record<string, VocabularyItem[]> = {
+    ...mockVocabularyItems,
+    ...curriculumExpansionVocabulary2026.reduce<Record<string, VocabularyItem[]>>((acc, item) => {
+      (acc[item.lessonId] ||= []).push(item);
+      return acc;
+    }, {})
+  };
   private grammarMap: Record<string, GrammarTopic> = mockGrammarTopics;
   private readingMap: Record<string, ReadingExercise> = mockReadingExercises;
   private listeningMap: Record<string, ListeningExercise> = mockListeningExercises;
