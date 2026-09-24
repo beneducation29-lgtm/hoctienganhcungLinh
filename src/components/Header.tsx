@@ -170,6 +170,10 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <button
                 onClick={() => {
+                  if (!student.email) {
+                    onOpenLogin();
+                    return;
+                  }
                   setShowProfileMenu(!showProfileMenu);
                   setShowNotifications(false);
                 }}
@@ -186,12 +190,12 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                   />
                   <div className="w-full h-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                    MT
+                    {student.email ? student.name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() : <LogIn className="w-4 h-4" />}
                   </div>
                 </div>
                 <div className="hidden md:flex flex-col text-left">
-                  <span className="text-xs font-semibold text-slate-900 leading-tight truncate max-w-[120px]">
-                    {student.name}
+                  <span className="text-xs font-semibold text-slate-900 leading-tight truncate max-w-[140px]">
+                    {student.email ? student.name : 'Đăng nhập Google'}
                   </span>
                   <span className="text-[11px] text-blue-600 font-bold leading-tight flex items-center gap-1">
                     {student.email || `Lớp ${student.currentGrade} · Trình độ ${student.englishLevel}`}
