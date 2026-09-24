@@ -38,7 +38,7 @@ export interface SpeakingCoachResponse {
   };
 }
 
-const model = 'gemini-2.5-flash';
+const model = 'gemini-2.5-flash-lite';
 
 function clamp(value: unknown, fallback = 70): number {
   const n = Number(value);
@@ -46,54 +46,49 @@ function clamp(value: unknown, fallback = 70): number {
 }
 
 function extractJson(text: string): unknown {
-  const cleaned = text.trim().replace(/^\`\`\`json\s*/i, '').replace(/^\`\`\`\s*/i, '').replace(/\s*\`\`\`$/i, '');
+  const cleaned = text.trim()
+    .replace(/^\`\`\`json\s*/i, '')
+    .replace(/^\`\`\`\s*/i, '')
+    .replace(/\s*\`\`\`$/i, '');
   return JSON.parse(cleaned);
 }
 
 function buildPrompt(input: SpeakingCoachRequest): string {
   const support =
     input.grade === '10'
-      ? 'Lớp 10: rất nhẹ nhàng, câu ngắn, tiếng Việt hỗ trợ rõ, chỉ 1 lỗi cần sửa và tối đa 2 cụm từ mới.'
+      ? 'Lớp 10: câu ngắn, tiếng Việt hỗ trợ; 1 lỗi, tối đa 2 cụm từ mới.'
       : input.grade === '11'
-        ? 'Lớp 11: cân bằng Anh-Việt, khuyến khích mở rộng ý, chỉ 1-2 điểm cần cải thiện và tối đa 3 cụm từ mới.'
-        : 'Lớp 12: ưu tiên tiếng Anh, phong cách luyện thi nhưng vẫn thân thiện, tập trung tính mạch lạc và độ chính xác, tối đa 3 cụm từ mới.';
+        ? 'Lớp 11: cân bằng Anh-Việt; 1 lỗi chính, tối đa 3 cụm từ mới.'
+        : 'Lớp 12: ưu tiên tiếng Anh, luyện thi; tập trung mạch lạc/độ chính xác, tối đa 3 cụm từ mới.';
 
-  return `Bạn là Linh, một AI English Speaking Buddy thân thiện cho học sinh THPT Việt Nam.
-Mục tiêu là giúp học sinh nói tốt hơn mà KHÔNG bị choáng ngợp.
+  const recent = (input.recentTurns ?? [])
+    .slice(-4)
+    .map((turn) => `${turn.speaker}: ${turn.text}`)
+    .join('\n');
 
-Hồ sơ:
-- Lớp: ${input.grade}
-- CEFR mục tiêu: ${input.cefr}
-- Chế độ: ${input.mode}
-- Quy tắc điều chỉnh: ${support}
+  return `Bạn là Linh, AI English Speaking Buddy cho học sinh THPT Việt Nam.
+${support}
+Lớp: ${input.grade}; CEFR: ${input.cefr}; mode: ${input.mode}.
+Chủ đề: ${input.scenario.title} / ${input.scenario.topic}.
+Câu hỏi: ${input.scenario.prompt}
+Gợi ý Việt: ${input.scenario.promptVi}
+Cụm từ: ${input.scenario.usefulPhrases.slice(0, 3).join(', ')}
+Follow-up: ${input.scenario.followUpQuestions.slice(0, 2).join(' | ')}
 
-Chủ đề:
-- ${input.scenario.title} / ${input.scenario.topic}
-- Câu hỏi: ${input.scenario.prompt}
-- Gợi ý tiếng Việt: ${input.scenario.promptVi}
-- Cụm từ hữu ích: ${input.scenario.usefulPhrases.join(', ')}
-- Từ vựng mục tiêu: ${input.scenario.vocabulary.join(', ')}
-- Câu hỏi tiếp theo: ${input.scenario.followUpQuestions.join(' | ')}
+Học sinh: "${input.transcript}"
+Lịch sử gần đây:
+${recent}
 
-Câu trả lời của học sinh:
-"${input.transcript}"
+Yêu cầu:
+- Khen 1 điều cụ thể trước.
+- Chỉ sửa 1 điểm quan trọng, không giảng dài.
+- Nếu câu ngắn, hỏi 1 câu nhỏ để mở rộng.
+- reply là câu Linh nói tiếp bằng tiếng Anh, tự nhiên, ngắn.
+- replyVi là hỗ trợ tiếng Việt ngắn.
+- correction chỉ có khi có lỗi đáng sửa.
+- Điểm là tín hiệu tiến bộ, không phải điểm thi.
 
-Lịch sử gần nhất:
-${(input.recentTurns ?? []).slice(-6).map(t => `${t.speaker}: ${t.text}`).join('\n')}
-
-Nguyên tắc bắt buộc:
-1. Không chấm theo kiểu gây áp lực. Khen một điều cụ thể trước.
-2. Không đưa một danh sách dài lỗi sai. Chỉ chọn điểm cải thiện có giá trị nhất ở lượt này.
-3. Không dạy quá nhiều từ mới.
-4. Nếu học sinh trả lời ngắn, hãy khuyến khích mở rộng bằng một câu hỏi nhỏ hoặc sentence starter.
-5. Không biến một lỗi nhỏ thành bài giảng ngữ pháp dài.
-6. Phản hồi phải phù hợp đúng lớp.
-7. reply là câu Linh nói tiếp bằng tiếng Anh, tự nhiên và ngắn.
-8. replyVi là diễn giải tiếng Việt ngắn để học sinh lớp 10-11 dễ hiểu; lớp 12 vẫn có thể dùng tiếng Việt khi cần.
-9. Nếu câu trả lời có lỗi đáng sửa, correction chỉ chứa MỘT lỗi tiêu biểu.
-10. Điểm số chỉ là tín hiệu tiến bộ, không phải điểm thi chính thức.
-
-Trả về DUY NHẤT JSON hợp lệ theo schema:
+Trả về DUY NHẤT JSON:
 {
   "feedback": {
     "clarity": number,
@@ -101,46 +96,39 @@ Trả về DUY NHẤT JSON hợp lệ theo schema:
     "grammar": number,
     "fluency": number,
     "overall": number,
-    "praise": "string in Vietnamese",
-    "oneFix": "string in Vietnamese",
-    "nextStep": "string in Vietnamese",
+    "praise": "Vietnamese",
+    "oneFix": "Vietnamese",
+    "nextStep": "Vietnamese",
     "newPhrases": ["string"]
   },
   "reply": "short English response/question",
   "replyVi": "short Vietnamese support",
   "correction": {
-    "original": "student phrase",
-    "improved": "better phrase",
-    "explanationVi": "short Vietnamese explanation"
+    "original": "string",
+    "improved": "string",
+    "explanationVi": "short Vietnamese"
   }
-}
-`;
+}`;
 }
 
 export async function coachSpeaking(input: SpeakingCoachRequest): Promise<SpeakingCoachResponse> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-
-  if (!input.transcript?.trim()) {
-    throw new Error('Transcript is empty');
-  }
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
+  if (!input.transcript?.trim()) throw new Error('Transcript is empty');
 
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
     model,
     contents: buildPrompt(input),
     config: {
-      temperature: 0.45,
+      temperature: 0.35,
       responseMimeType: 'application/json',
-      maxOutputTokens: 900
+      maxOutputTokens: 520,
+      thinkingConfig: { thinkingBudget: 0 }
     }
   });
 
-  const raw = response.text ?? '';
-  const parsed = extractJson(raw) as Partial<SpeakingCoachResponse>;
-
+  const parsed = extractJson(response.text ?? '') as Partial<SpeakingCoachResponse>;
   const feedback = parsed.feedback ?? {
     clarity: 70,
     vocabulary: 70,
@@ -163,11 +151,13 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
       praise: String(feedback.praise || 'Em đã bắt đầu rất tốt.'),
       oneFix: String(feedback.oneFix || 'Thử nói thêm một ý ngắn nhé.'),
       nextStep: String(feedback.nextStep || 'Hãy tiếp tục nói thêm một câu.'),
-      newPhrases: Array.isArray(feedback.newPhrases) ? feedback.newPhrases.slice(0, 3).map(String) : []
+      newPhrases: Array.isArray(feedback.newPhrases)
+        ? feedback.newPhrases.slice(0, 3).map(String)
+        : []
     },
     reply: String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.'),
     replyVi: String(parsed.replyVi || 'Mình nói thêm một ý ngắn nhé.'),
-    correction: parsed.correction && parsed.correction.original
+    correction: parsed.correction?.original
       ? {
           original: String(parsed.correction.original),
           improved: String(parsed.correction.improved || parsed.correction.original),
