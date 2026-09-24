@@ -87,7 +87,7 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-slate-100 gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-base shrink-0">
-                  {student.englishLevel}
+                  {student.email ? student.englishLevel : 'Chưa thiết lập'}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -95,10 +95,10 @@ export const Hero: React.FC<HeroProps> = ({
                       Không gian học tập Tiếng Anh
                     </span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span className="text-xs text-emerald-600 font-medium">Lớp {student.currentGrade}</span>
+                    <span className="text-xs text-emerald-600 font-medium">{student.email ? `Lớp ${student.currentGrade}` : "Đăng nhập Google để cá nhân hóa"}</span>
                   </div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">
-                    Chào {student.name}, mục tiêu lên trình độ {student.targetLevel} đạt {student.levelProgressPercent}%!
+                    {student.email ? `Chào ${student.name}` : 'Chào bạn'}, mục tiêu lên trình độ {student.targetLevel} đạt {student.levelProgressPercent}%!
                   </h3>
                 </div>
               </div>
