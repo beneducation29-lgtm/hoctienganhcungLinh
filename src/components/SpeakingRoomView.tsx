@@ -1,5 +1,6 @@
 import avatarUrl from './speaking/aiSpeakingAvatar.svg';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import avatarUrl from './speaking/aiSpeakingAvatar.svg';
 import {
   ArrowRight,
   BookOpen,
@@ -347,7 +348,11 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
                     ))}
                   </div>
 
-                  {aiError && (\n                    <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">{aiError}</div>\n                  )}\n\n                  <textarea
+                  {aiError && (
+                    <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">{aiError}</div>
+                  )}
+
+                  <textarea
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
                     rows={3}
