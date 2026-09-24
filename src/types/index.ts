@@ -19,6 +19,7 @@ export type ActiveTab =
   | 'speaking'
   | 'reading'
   | 'listening'
+  | 'writing'
   | 'progress';
 
 export type UnitModuleType =

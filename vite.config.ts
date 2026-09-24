@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig, type Plugin} from 'vite';
 import {coachSpeaking} from './server/speakingCoach';
+import {coachWriting} from './server/writingCoach';
 
 
 function speakingCoachApi(): Plugin {
@@ -38,9 +39,41 @@ function speakingCoachApi(): Plugin {
   };
 }
 
+function writingCoachApi(): Plugin {
+  return {
+    name: 'writing-coach-api',
+    configureServer(server) {
+      server.middlewares.use('/api/writing/coach', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'Method not allowed' }));
+          return;
+        }
+        try {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(Buffer.from(chunk));
+          const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          const result = await coachWriting(body);
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify(result));
+        } catch (error) {
+          console.error('[writing-coach]', error);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({
+            error: error instanceof Error ? error.message : 'Writing AI request failed'
+          }));
+        }
+      });
+    }
+  };
+}
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), speakingCoachApi()],
+    plugins: [react(), tailwindcss(), speakingCoachApi(), writingCoachApi()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
