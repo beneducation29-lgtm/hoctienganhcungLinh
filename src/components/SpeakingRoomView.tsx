@@ -159,7 +159,7 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
         mode,
         scenario,
         transcript: studentText,
-        recentTurns: turns
+        recentTurns: turns.slice(-4)
       });
 
       setFeedback(aiResult.feedback);
