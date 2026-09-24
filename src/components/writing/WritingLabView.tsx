@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { BookPen, CheckCircle2, Eye, EyeOff, FileText, Sparkles, Target, WandSparkles } from 'lucide-react';
+import { BookOpen, CheckCircle2, Eye, EyeOff, FileText, Sparkles, Target, WandSparkles } from 'lucide-react';
 import { GradeLevel } from '../../types/contentArchitecture';
 import { writingService, WritingLabItem } from '../../services/writingService';
 import { coachWriting, WritingCoachResponse } from '../../services/writingAiService';
@@ -56,7 +56,7 @@ export const WritingLabView: React.FC<WritingLabViewProps> = ({ initialGrade }) 
       <section className="rounded-3xl bg-gradient-to-br from-violet-950 via-indigo-900 to-slate-900 text-white p-8 sm:p-10 shadow-xl">
         <div className="max-w-3xl space-y-4">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-bold">
-            <BookPen className="w-3.5 h-3.5" /> WRITING LAB · VIẾT
+            <BookOpen className="w-3.5 h-3.5" /> WRITING LAB · VIẾT
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">Viết từng bước, sửa đúng một điểm.</h1>
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
