@@ -320,6 +320,12 @@ export default function App() {
                   const lesson = sampleLessons[0];
                   handleOpenLesson(lesson);
                 }}
+                onOpenSkill={(skill) => {
+                  if (skill === 'vocabulary' || skill === 'grammar' || skill === 'reading' || skill === 'listening' || skill === 'speaking' || skill === 'writing') {
+                    setActiveTab(skill);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
               />
             )}
           </>
