@@ -11,7 +11,8 @@ import {
   Flame,
   Award,
   LogOut,
-  Languages
+  Languages,
+  LogIn
 } from 'lucide-react';
 import { ActiveTab, Notification, StudentProfile } from '../types';
 
@@ -21,6 +22,8 @@ interface HeaderProps {
   student: StudentProfile;
   notifications: Notification[];
   onOpenSearch: () => void;
+  onOpenLogin: () => void;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -28,7 +31,9 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   student,
   notifications,
-  onOpenSearch
+  onOpenSearch,
+  onOpenLogin,
+  onLogout
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
