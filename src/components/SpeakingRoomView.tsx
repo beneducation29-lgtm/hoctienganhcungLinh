@@ -17,6 +17,7 @@ import {
 import type { GradeLevel } from '../types/contentArchitecture';
 import type { SpeakingFeedback, SpeakingMode, SpeakingTurn } from '../types/speakingRoom';
 import {
+  coachSpeakingWithGemini,
   createAiReply,
   evaluateSpeaking,
   getScenarioById,
