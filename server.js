@@ -3,6 +3,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { coachSpeaking } from './server/speakingCoach.ts';
+import { coachWriting } from './server/writingCoach.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +20,18 @@ app.post('/api/speaking/coach', async (req, res) => {
     console.error('[speaking-coach]', error);
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Speaking AI request failed'
+    });
+  }
+});
+
+app.post('/api/writing/coach', async (req, res) => {
+  try {
+    const result = await coachWriting(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error('[writing-coach]', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Writing AI request failed'
     });
   }
 });
