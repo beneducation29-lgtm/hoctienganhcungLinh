@@ -16,6 +16,7 @@ import { AITutorView } from './components/AITutorView';
 import { ProgressView } from './components/ProgressView';
 import { VocabularyLabView } from './components/vocabulary/VocabularyLabView';
 import { GrammarLabView } from './components/grammar/GrammarLabView';
+import { SpeakingRoomView } from './components/SpeakingRoomView';
 
 // Unified Quiz Engine
 import { QuizEngine } from './components/quiz/QuizEngine';
@@ -151,6 +152,11 @@ export default function App() {
 
   const handleOpenSkillRoom = (skillId: SkillType, level?: SkillLevel) => {
     const matchedSkill = fourSkillModules.find((s) => s.id === skillId);
+    if (skillId === 'speaking') {
+      setActiveTab('speaking');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (matchedSkill) {
       setActiveSkillModal({ skill: matchedSkill, level });
     }
@@ -287,6 +293,10 @@ export default function App() {
 
             {activeTab === 'review' && (
               <PracticeView onOpenFlashcards={() => setShowFlashcards(true)} />
+            )}
+
+            {activeTab === 'speaking' && (
+              <SpeakingRoomView initialGrade={student.currentGrade} />
             )}
 
             {activeTab === 'skills' && (

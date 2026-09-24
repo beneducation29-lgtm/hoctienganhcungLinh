@@ -43,6 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'grammar', label: 'Ngữ pháp' },
     { id: 'review', label: 'Ôn tập' },
     { id: 'skills', label: '4 kỹ năng' },
+    { id: 'speaking', label: 'Phòng luyện nói AI' },
     { id: 'aitutor', label: 'AI Tutor' },
     { id: 'progress', label: 'Tiến độ' }
   ];
