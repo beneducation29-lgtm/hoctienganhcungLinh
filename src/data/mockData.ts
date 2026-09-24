@@ -9,8 +9,8 @@ import {
 } from '../types';
 
 export const initialStudentProfile: StudentProfile = {
-  name: 'Nguyễn Minh Triết',
-  school: 'THPT Chuyên Hà Nội - Amsterdam',
+  name: 'Học sinh',
+  school: 'Chưa đăng nhập',
   currentGrade: '11',
   avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
   studyTimeHours: 48.5,
