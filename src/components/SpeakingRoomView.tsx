@@ -1,3 +1,4 @@
+import avatarUrl from './speaking/aiSpeakingAvatar.svg';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -226,7 +227,7 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
                   isSpeaking && 'ring-4 ring-sky-200'
                 )}>
                   <img
-                    src="/src/components/speaking/aiSpeakingAvatar.svg"
+                    src={avatarUrl}
                     alt="AI English speaking tutor"
                     className="w-full aspect-square object-cover"
                   />
@@ -273,7 +274,7 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
                     <div key={turn.id} className={cx('flex gap-3', turn.speaker === 'student' && 'justify-end')}>
                       {turn.speaker === 'ai' && (
                         <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 border border-sky-100">
-                          <img src="/src/components/speaking/aiSpeakingAvatar.svg" alt="" className="w-full h-full" />
+                          <img src={avatarUrl} alt="" className="w-full h-full" />
                         </div>
                       )}
                       <div className={cx(
