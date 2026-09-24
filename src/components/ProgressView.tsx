@@ -25,11 +25,13 @@ import { adaptiveLearningService } from '../services/adaptiveLearningService';
 interface ProgressViewProps {
   student: StudentProfile;
   onOpenRecentLesson: () => void;
+  onOpenSkill?: (skill: string) => void;
 }
 
 export const ProgressView: React.FC<ProgressViewProps> = ({
   student,
-  onOpenRecentLesson
+  onOpenRecentLesson,
+  onOpenSkill
 }) => {
   const studentId = (student as any).id || 'hs-student-01';
   const recentActivities: LearningActivity[] = contentService.getRecentActivities(studentId, 6);
@@ -215,7 +217,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
 
         <div className="grid md:grid-cols-3 gap-3">
           {adaptivePlan.items.map((item, index) => (
-            <div key={item.id} className="rounded-2xl bg-white/10 border border-white/10 p-5 flex flex-col">
+            <button key={item.id} type="button" onClick={() => onOpenSkill?.(item.skill)} className="text-left rounded-2xl bg-white/10 border border-white/10 p-5 flex flex-col hover:bg-white/15 transition-colors">
               <div className="flex items-center justify-between gap-2">
                 <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-extrabold">{index + 1}</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{item.estimatedMinutes} phút</span>
@@ -228,7 +230,7 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
                   {item.priority === 'high' ? 'Ưu tiên hôm nay' : 'Duy trì kỹ năng'} <ChevronRight className="w-3.5 h-3.5" />
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
 
