@@ -20,6 +20,7 @@ import {
 import { StudentProfile } from '../types';
 import { contentService } from '../services/contentService';
 import { LearningActivity } from '../types/contentArchitecture';
+import { adaptiveLearningService } from '../services/adaptiveLearningService';
 
 interface ProgressViewProps {
   student: StudentProfile;
@@ -32,6 +33,8 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
 }) => {
   const studentId = (student as any).id || 'hs-student-01';
   const recentActivities: LearningActivity[] = contentService.getRecentActivities(studentId, 6);
+  const adaptivePlan = adaptiveLearningService.getPlan(student, studentId);
+  const skillLabel: Record<string, string> = { vocabulary: 'Từ vựng', grammar: 'Ngữ pháp', reading: 'Đọc hiểu', listening: 'Nghe hiểu', speaking: 'Nói', writing: 'Viết' };
 
   const englishCompetencies = [
     {
@@ -191,6 +194,53 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
           <p className="text-xs text-amber-600 font-medium">Kỷ luật tự giác rất cao</p>
         </div>
       </div>
+
+      {/* Adaptive Daily Learning Plan */}
+      <section className="rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[11px] font-bold">
+              <Sparkles className="w-3.5 h-3.5" /> KẾ HOẠCH HỌC THÍCH ỨNG
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold mt-3">Hôm nay Linh gợi ý {adaptivePlan.totalMinutes} phút</h2>
+            <p className="text-sm text-slate-300 mt-2 max-w-2xl">
+              Kế hoạch được tạo từ tiến độ, kết quả luyện tập và kỹ năng cần củng cố của bạn — chỉ tập trung vào vài việc quan trọng để không bị quá tải.
+            </p>
+          </div>
+          <div className="shrink-0 rounded-2xl bg-white/10 border border-white/10 px-4 py-3">
+            <div className="text-[10px] uppercase tracking-wider text-slate-400">Trọng tâm hôm nay</div>
+            <div className="text-lg font-extrabold mt-1">{skillLabel[adaptivePlan.focusSkill]} · {adaptivePlan.focusScore}%</div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-3">
+          {adaptivePlan.items.map((item, index) => (
+            <div key={item.id} className="rounded-2xl bg-white/10 border border-white/10 p-5 flex flex-col">
+              <div className="flex items-center justify-between gap-2">
+                <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-extrabold">{index + 1}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">{item.estimatedMinutes} phút</span>
+              </div>
+              <h3 className="font-bold text-sm mt-4">{item.title}</h3>
+              <p className="text-xs text-slate-300 leading-5 mt-2">{item.description}</p>
+              <div className="mt-auto pt-4">
+                <div className="text-[10px] text-slate-400 leading-4">{item.reason}</div>
+                <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-white">
+                  {item.priority === 'high' ? 'Ưu tiên hôm nay' : 'Duy trì kỹ năng'} <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {Object.entries(adaptivePlan.skillBreakdown).filter(([key]) => key !== 'overall').map(([skill, score]) => (
+            <div key={skill} className="rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+              <div className="text-[10px] text-slate-400">{skillLabel[skill]}</div>
+              <div className="text-sm font-extrabold mt-0.5">{score}%</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Recent Activity Log (from ContentService) */}
       <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
