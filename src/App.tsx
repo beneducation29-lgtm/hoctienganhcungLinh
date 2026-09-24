@@ -17,6 +17,8 @@ import { ProgressView } from './components/ProgressView';
 import { VocabularyLabView } from './components/vocabulary/VocabularyLabView';
 import { GrammarLabView } from './components/grammar/GrammarLabView';
 import { SpeakingRoomView } from './components/SpeakingRoomView';
+import { ReadingLabView } from './components/reading/ReadingLabView';
+import { ListeningLabView } from './components/listening/ListeningLabView';
 
 // Unified Quiz Engine
 import { QuizEngine } from './components/quiz/QuizEngine';
@@ -112,37 +114,24 @@ export default function App() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         break;
 
-      case 'reading': {
-        const session = quizService.createQuiz({
-          quizTitle: 'Luyện tập Đọc hiểu Học thuật THPT',
-          quizSubtitle: 'Kỹ thuật Skimming, Scanning và đoán nghĩa từ vựng trong văn cảnh',
-          skill: 'reading',
-          quizMode: 'practice',
-          questions: questionSelector.getQuestionsBySkill('reading', 6)
-        });
-        setActiveQuizSession(session);
+      case 'reading':
+        setActiveTab('reading');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         break;
-      }
 
-      case 'listening': {
-        const session = quizService.createQuiz({
-          quizTitle: 'Luyện tập Nghe hiểu & Ngữ âm THPT',
-          quizSubtitle: 'Rèn luyện phản xạ bắt từ khóa, phát âm đuôi -ed và trọng âm từ',
-          skill: 'listening',
-          quizMode: 'practice',
-          questions: questionSelector.getQuestionsBySkill('listening', 6)
-        });
-        setActiveQuizSession(session);
+      case 'listening':
+        setActiveTab('listening');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         break;
-      }
     }
   };
 
-  const handleStartQuizPractice = (title: string, subtitle: string, questions: any[]) => {
+  const handleStartQuizPractice = (title: string, subtitle: string, questions: any[], quizId?: string) => {
     const session = quizService.createQuiz({
       quizTitle: title,
       quizSubtitle: subtitle,
       quizMode: 'practice',
+      quizId,
       questions: questions && questions.length > 0 ? questions : questionSelector.getMixedQuestions(8),
       randomize: true
     });
@@ -152,8 +141,8 @@ export default function App() {
 
   const handleOpenSkillRoom = (skillId: SkillType, level?: SkillLevel) => {
     const matchedSkill = fourSkillModules.find((s) => s.id === skillId);
-    if (skillId === 'speaking') {
-      setActiveTab('speaking');
+    if (skillId === 'speaking' || skillId === 'reading' || skillId === 'listening') {
+      setActiveTab(skillId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -297,6 +286,14 @@ export default function App() {
 
             {activeTab === 'speaking' && (
               <SpeakingRoomView initialGrade={student.currentGrade} />
+            )}
+
+            {activeTab === 'reading' && (
+              <ReadingLabView initialGrade={student.currentGrade} onStartQuizPractice={handleStartQuizPractice} />
+            )}
+
+            {activeTab === 'listening' && (
+              <ListeningLabView initialGrade={student.currentGrade} onStartQuizPractice={handleStartQuizPractice} />
             )}
 
             {activeTab === 'skills' && (
