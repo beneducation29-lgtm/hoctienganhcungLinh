@@ -198,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
                     {student.email ? student.name : 'Đăng nhập Google'}
                   </span>
                   <span className="text-[11px] text-blue-600 font-bold leading-tight flex items-center gap-1">
-                    {student.email || `Lớp ${student.currentGrade} · Trình độ ${student.englishLevel}`}
+                    {student.email || 'Cá nhân hóa hồ sơ học tập'}
                   </span>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden md:block" />
