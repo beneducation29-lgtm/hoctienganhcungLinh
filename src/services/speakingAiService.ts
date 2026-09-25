@@ -46,9 +46,27 @@ export async function coachSpeakingWithGemini(input: {
     })
   });
 
-  const data = await response.json().catch(() => null);
+  const raw = await response.text();
+  let data: Partial<SpeakingCoachResponse> & { error?: string; diagnostic?: string } | null = null;
+
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    // The endpoint may return an HTML/Vercel error page instead of JSON.
+  }
+
   if (!response.ok) {
-    throw new Error(data?.error || 'AI speaking service is unavailable');
+    const serverMessage = typeof data?.error === 'string' ? data.error : '';
+    const suffix = serverMessage ? ` — ${serverMessage.slice(0, 240)}` : '';
+    throw new Error(
+      `Speaking API HTTP ${response.status}${suffix}`
+    );
+  }
+
+  if (!data || typeof data !== 'object' || !data.feedback || !data.reply) {
+    throw new Error(
+      `Speaking API returned invalid response (HTTP ${response.status})`
+    );
   }
 
   return data as SpeakingCoachResponse;
