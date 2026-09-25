@@ -38,7 +38,23 @@ export interface SpeakingCoachResponse {
   };
 }
 
-const model = 'gemini-2.5-flash-lite';
+const model = 'gemini-3.5-flash-lite';
+
+function describeGeminiError(error: unknown): { status: number; code: string; message: string } {
+  const value = error as { status?: unknown; code?: unknown; message?: unknown; error?: { code?: unknown; message?: unknown } };
+  const nested = value?.error;
+  const statusNumber = Number(value?.status ?? value?.code);
+  const status = Number.isFinite(statusNumber) && statusNumber >= 400 && statusNumber < 600 ? statusNumber : 502;
+  const rawMessage = String(nested?.message ?? value?.message ?? 'Gemini request failed');
+  const normalized = rawMessage.toLowerCase();
+  let code = String(nested?.code ?? 'gemini_error');
+  if (status === 401) code = 'authentication';
+  else if (status === 403) code = 'permission_denied';
+  else if (status === 404) code = 'model_not_found_or_resource_missing';
+  else if (status === 429) code = 'quota_or_rate_limit';
+  else if (normalized.includes('api key')) code = 'authentication';
+  return { status, code, message: rawMessage.slice(0, 500) };
+}
 
 function clamp(value: unknown, fallback = 70): number {
   const n = Number(value);
@@ -117,16 +133,28 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
   if (!input.transcript?.trim()) throw new Error('Transcript is empty');
 
   const ai = new GoogleGenAI({ apiKey });
-  const response = await ai.models.generateContent({
-    model,
-    contents: buildPrompt(input),
-    config: {
-      temperature: 0.35,
-      responseMimeType: 'application/json',
-      maxOutputTokens: 520,
-      thinkingConfig: { thinkingBudget: 0 }
-    }
-  });
+  let response;
+  try {
+    response = await ai.models.generateContent({
+      model,
+      contents: buildPrompt(input),
+      config: {
+        temperature: 0.35,
+        responseMimeType: 'application/json',
+        maxOutputTokens: 480,
+        thinkingConfig: { thinkingBudget: 0 }
+      }
+    });
+  } catch (error) {
+    const detail = describeGeminiError(error);
+    console.error('[speaking-coach] Gemini request failed', {
+      model,
+      status: detail.status,
+      code: detail.code,
+      message: detail.message
+    });
+    throw new Error(`Gemini ${detail.code} (${detail.status}): ${detail.message}`);
+  }
 
   const parsed = extractJson(response.text ?? '') as Partial<SpeakingCoachResponse>;
   const feedback = parsed.feedback ?? {
