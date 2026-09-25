@@ -183,7 +183,13 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
       setTranscript('');
     } catch (error) {
       console.error(error);
-      setAiError('AI đang bận một chút. Mình vẫn luyện được nhé — phản hồi cơ bản đã sẵn sàng.');
+      const message = error instanceof Error ? error.message : '';
+      const diagnostic = message.match(/Gemini ([a-z0-9_]+) \((\d{3})\)/i);
+      setAiError(
+        diagnostic
+          ? `AI chưa kết nối được Gemini (${diagnostic[2]} — ${diagnostic[1]}). Mình vẫn cho em luyện bản cơ bản nhé.`
+          : 'AI đang bận một chút. Mình vẫn cho em luyện bản cơ bản nhé.'
+      );
       const result = evaluateSpeaking(studentText, scenario, profile);
       setFeedback(result);
       setTurns((prev) => prev.concat([
