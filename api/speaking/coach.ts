@@ -9,9 +9,6 @@ export interface SpeakingCoachRequest {
     title: string;
     topic: string;
     prompt: string;
-    promptVi: string;
-    usefulPhrases: string[];
-    vocabulary: string[];
     followUpQuestions: string[];
   };
   transcript: string;
