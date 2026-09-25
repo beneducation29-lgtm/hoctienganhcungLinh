@@ -79,7 +79,7 @@ function buildPrompt(input: SpeakingCoachRequest): string {
         : 'Lớp 12: ưu tiên tiếng Anh, luyện thi; tập trung mạch lạc/độ chính xác, tối đa 3 cụm từ mới.';
 
   const recent = (input.recentTurns ?? [])
-    .slice(-4)
+    .slice(-2)
     .map((turn) => `${turn.speaker}: ${turn.text}`)
     .join('\n');
 
@@ -97,12 +97,17 @@ Lịch sử gần đây:
 ${recent}
 
 Yêu cầu:
-- Khen 1 điều cụ thể trước.
+- Khen 1 điều cụ thể, ngắn gọn và dựa trên đúng câu học sinh vừa nói.
 - Chỉ sửa 1 điểm quan trọng, không giảng dài.
-- Nếu câu ngắn, hỏi 1 câu nhỏ để mở rộng.
-- reply là câu Linh nói tiếp bằng tiếng Anh, tự nhiên, ngắn.
-- replyVi là hỗ trợ tiếng Việt ngắn.
-- correction chỉ có khi có lỗi đáng sửa.
+- Không tự đoán ý học sinh và không tự đổi một từ hợp lệ sang từ khác. Ví dụ "glass" không được tự sửa thành "plastic" chỉ vì plastic phổ biến hơn.
+- Nếu từ/câu của học sinh hợp nghĩa trong ngữ cảnh, chấp nhận và tiếp tục hội thoại.
+- Nếu câu chưa rõ hoặc có thể hiểu theo nhiều cách, hỏi lại nhẹ nhàng thay vì đoán.
+- Nếu câu ngắn, hỏi 1 câu nhỏ để mở rộng; nếu câu đã đủ ý, phản hồi tự nhiên rồi hỏi tiếp.
+- reply chỉ 1 câu ngắn hoặc tối đa 2 câu rất ngắn, giống hội thoại thật; không lặp lại nguyên câu học sinh.
+- Ưu tiên dùng một follow-up phù hợp với nội dung vừa nói, không máy móc.
+- replyVi là hỗ trợ tiếng Việt ngắn, không dịch từng chữ.
+- correction chỉ có khi có lỗi rõ ràng hoặc lỗi đáng sửa cho trình độ này.
+- Không biến lựa chọn từ vựng khác nhau thành lỗi ngữ pháp.
 - Điểm là tín hiệu tiến bộ, không phải điểm thi.
 
 Trả về DUY NHẤT JSON:
@@ -140,9 +145,8 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
       model,
       contents: buildPrompt(input),
       config: {
-        temperature: 0.35,
         responseMimeType: 'application/json',
-        maxOutputTokens: 480,
+        maxOutputTokens: 360,
         thinkingConfig: { thinkingLevel: 'minimal' }
       }
     });
