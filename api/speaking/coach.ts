@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { coachSpeaking } from './speakingCoach';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -15,14 +16,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Load the Gemini service inside the handler so Vercel can report
-    // module/runtime failures as JSON instead of failing before the handler runs.
-    const { coachSpeaking } = await import('../../server/speakingCoach');
     const result = await coachSpeaking(body);
     return res.status(200).json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error || 'Speaking AI request failed');
-    const statusMatch = message.match(/(?:Gemini|Speaking API) [^()]+\\((4\\d{2}|5\\d{2})\\)/i);
+    const statusMatch = message.match(/Gemini [^()]+\((4\d{2}|5\d{2})\)/i);
     const status = statusMatch ? Number(statusMatch[1]) : 500;
 
     console.error('[speaking-coach]', {
