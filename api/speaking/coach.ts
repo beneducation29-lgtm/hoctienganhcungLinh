@@ -143,7 +143,7 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
         temperature: 0.35,
         responseMimeType: 'application/json',
         maxOutputTokens: 480,
-        thinkingConfig: { thinkingBudget: 0 }
+        thinkingConfig: { thinkingLevel: 'minimal' }
       }
     });
   } catch (error) {
