@@ -94,6 +94,7 @@ Nguyên tắc:
 - Ưu tiên hội thoại tự nhiên hơn chấm điểm.
 - Khen 1 điểm cụ thể, ngắn.
 - Chỉ sửa lỗi rõ ràng và đáng sửa ở trình độ này.
+- Nếu có lỗi ngữ pháp rõ ràng, correction phải chứa đúng 1 lỗi chính.
 - Không tự đoán ý hoặc đổi một từ hợp lệ thành từ khác. "glass" không tự đổi thành "plastic".
 - Nếu câu có nghĩa hợp lý, chấp nhận cách diễn đạt và hỏi tiếp.
 - Nếu câu mơ hồ, hỏi lại nhẹ nhàng.
@@ -221,6 +222,19 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
     newPhrases: []
   };
 
+  const detectedCorrection = parsed.correction?.original
+    ? { original: String(parsed.correction.original), improved: String(parsed.correction.improved || parsed.correction.original), explanationVi: String(parsed.correction.explanationVi || '') }
+    : undefined;
+  const shouldVerbMatch = input.transcript.match(/\bshould\s+([a-z]+(?:s|es))\b/i);
+  const fallbackCorrection = !detectedCorrection && shouldVerbMatch
+    ? { original: shouldVerbMatch[0], improved: "should " + shouldVerbMatch[1].replace(/(?:es|s)$/i, ''), explanationVi: 'Sau “should”, động từ giữ nguyên mẫu.' }
+    : undefined;
+  const correction = detectedCorrection ?? fallbackCorrection;
+  let reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
+  if (correction && !reply.toLowerCase().includes(correction.improved.toLowerCase())) {
+    reply = 'Good idea! Small correction: "' + correction.improved + '" ' + (input.scenario.followUpQuestions[0] || 'What result would you expect from that?');
+  }
+
   return {
     feedback: {
       clarity: clamp(feedback.clarity),
@@ -235,15 +249,9 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
         ? feedback.newPhrases.slice(0, 3).map(String)
         : []
     },
-    reply: String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.'),
-    replyVi: String(parsed.replyVi || 'Mình nói thêm một ý ngắn nhé.'),
-    correction: parsed.correction?.original
-      ? {
-          original: String(parsed.correction.original),
-          improved: String(parsed.correction.improved || parsed.correction.original),
-          explanationVi: String(parsed.correction.explanationVi || '')
-        }
-      : undefined
+    reply,
+    replyVi: String(correction ? 'Sửa nhẹ một điểm ngữ pháp rồi mình nói tiếp nhé.' : parsed.replyVi || 'Mình nói thêm một ý ngắn nhé.'),
+    correction
   };
 }
 
