@@ -129,8 +129,8 @@ Trả về DUY NHẤT JSON:
 
 export async function coachSpeaking(input: SpeakingCoachRequest): Promise<SpeakingCoachResponse> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
-  if (!input.transcript?.trim()) throw new Error('Transcript is empty');
+  if (!apiKey) throw new Error('Speaking configuration error: GEMINI_API_KEY is not configured');
+  if (!input.transcript?.trim()) throw new Error('Speaking validation error: Transcript is empty');
 
   const ai = new GoogleGenAI({ apiKey });
   let response;
@@ -156,7 +156,25 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
     throw new Error(`Gemini ${detail.code} (${detail.status}): ${detail.message}`);
   }
 
-  const parsed = extractJson(response.text ?? '') as Partial<SpeakingCoachResponse>;
+  const responseText = response.text ?? '';
+  if (!responseText.trim()) {
+    throw new Error('Gemini response error: Gemini returned an empty response');
+  }
+
+  let parsed: Partial<SpeakingCoachResponse>;
+  try {
+    parsed = extractJson(responseText) as Partial<SpeakingCoachResponse>;
+  } catch (error) {
+    console.error('[speaking-coach] Gemini JSON parse failed', {
+      model,
+      responsePreview: responseText.slice(0, 300),
+      error: error instanceof Error ? error.message : String(error)
+    });
+    throw new Error(
+      `Gemini response parse error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+
   const feedback = parsed.feedback ?? {
     clarity: 70,
     vocabulary: 70,

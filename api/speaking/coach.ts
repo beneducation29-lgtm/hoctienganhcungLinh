@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error || 'Speaking AI request failed');
-    const statusMatch = message.match(/Gemini [^()]+\((4\d{2}|5\d{2})\)/i);
+    const statusMatch = message.match(/(?:Gemini|Speaking API) [^()]+\((4\d{2}|5\d{2})\)/i);
     const status = statusMatch ? Number(statusMatch[1]) : 500;
 
     console.error('[speaking-coach]', {
@@ -30,7 +30,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(status).json({
       error: message.slice(0, 800),
-      diagnostic: 'speaking-function-runtime-error'
+      diagnostic: 'speaking-function-runtime-error',
+      phase: message.startsWith('Gemini response parse error')
+        ? 'response-parse'
+        : message.startsWith('Gemini response error')
+          ? 'gemini-response'
+          : message.startsWith('Gemini ')
+            ? 'gemini-request'
+            : message.startsWith('Speaking configuration')
+              ? 'configuration'
+              : message.startsWith('Speaking validation')
+                ? 'validation'
+                : 'function-runtime'
     });
   }
 }
