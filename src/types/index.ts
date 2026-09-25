@@ -180,6 +180,7 @@ export interface DailyPracticeCard {
 
 export interface StudentProfile {
   name: string;
+  email?: string;
   school: string;
   currentGrade: Grade;
   avatarUrl: string;

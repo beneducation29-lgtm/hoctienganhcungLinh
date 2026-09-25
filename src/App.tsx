@@ -47,7 +47,8 @@ import {
   SkillModule,
   SkillType,
   SkillLevel,
-  DailyPracticeCard
+  DailyPracticeCard,
+  StudentProfile
 } from './types';
 
 export default function App() {
@@ -86,11 +87,44 @@ export default function App() {
   };
 
   const handleMarkLessonCompleted = (lessonId: string) => {
-    setStudent((prev) => ({
+    setStudent((prev: StudentProfile) => ({
       ...prev,
       completedLessons: prev.completedLessons + 1,
       studyTimeHours: Number((prev.studyTimeHours + 0.5).toFixed(1))
     }));
+  };
+
+  const handleGoogleLogin = (profile: GoogleProfile) => {
+    const updated: StudentProfile = {
+      ...student,
+      name: profile.name,
+      email: profile.email,
+      avatarUrl: profile.avatarUrl || student.avatarUrl,
+      school: 'Tài khoản Google'
+    };
+    setStudent(updated);
+    try {
+      localStorage.setItem(
+        'english-platform-google-profile',
+        JSON.stringify({
+          name: profile.name,
+          email: profile.email,
+          avatarUrl: profile.avatarUrl,
+          school: 'Tài khoản Google'
+        })
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('english-platform-google-profile');
+    } catch {
+      // ignore
+    }
+    setStudent(initialStudentProfile);
   };
 
   // Launch unified Quiz Engine from Daily Practice cards

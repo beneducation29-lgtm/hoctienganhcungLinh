@@ -48,6 +48,12 @@ import {
   mockLearningActivities,
   mockStudentProgressList
 } from '../data/mockContentArchitecture';
+import {
+  curriculumExpansionUnits2026,
+  curriculumExpansionLessons2026,
+  curriculumExpansionVocabulary2026,
+  curriculumExpansionQuestions2026
+} from '../data/curriculumExpansion2026';
 
 class ContentService {
   private curriculum: Curriculum = mockCurriculum;

@@ -302,17 +302,22 @@ export const Header: React.FC<HeaderProps> = ({
             ))}
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
             <span>Chuỗi streak: <strong className="text-amber-600">{student.streakDays} ngày</strong></span>
+            <span>Mục tiêu CEFR: <strong className="text-blue-600">{student.targetLevel}</strong></span>
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
             {student.email ? (
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   onLogout();
                 }}
-                className="text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+                className="flex items-center gap-1.5 text-xs text-rose-600 font-medium py-1 px-2 rounded-lg hover:bg-rose-50 cursor-pointer"
               >
-                Đăng xuất
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Đăng xuất</span>
               </button>
             ) : (
               <button
@@ -320,9 +325,10 @@ export const Header: React.FC<HeaderProps> = ({
                   setMobileMenuOpen(false);
                   onOpenLogin();
                 }}
-                className="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer"
+                className="flex items-center gap-1.5 text-xs text-blue-600 font-medium py-1 px-2 rounded-lg hover:bg-blue-50 cursor-pointer"
               >
-                Đăng nhập Google
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Đăng nhập</span>
               </button>
             )}
           </div>

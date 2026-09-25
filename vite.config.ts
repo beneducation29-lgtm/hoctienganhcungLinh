@@ -2,7 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig, type Plugin} from 'vite';
-import {coachSpeaking} from './server/speakingCoach';
+import {coachSpeaking} from './server/speakingCoach.ts';
 
 
 function speakingCoachApi(): Plugin {
