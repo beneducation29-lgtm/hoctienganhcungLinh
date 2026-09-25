@@ -108,6 +108,9 @@ Nguyên tắc:
 - replyVi: 1 câu hỗ trợ tiếng Việt, không dịch từng chữ.
 - newPhrases: tối đa ${input.grade === '10' ? 2 : 3} cụm từ.
 - correction chỉ xuất hiện khi thật sự cần.
+- correction là feedback có cấu trúc, KHÔNG cần xuất hiện trong reply.
+- Tuyệt đối không chèn câu sửa ngữ pháp theo mẫu vào reply.
+- reply phải tự nhiên theo ngữ cảnh và không dùng mẫu cố định chỉ vì có correction.
 - Điểm chỉ là tín hiệu tiến bộ.
 
 Trả về DUY NHẤT JSON:
@@ -131,6 +134,40 @@ Trả về DUY NHẤT JSON:
     "explanationVi": "short"
   }
 }`;
+}
+
+function isHighConfidenceCorrection(transcript: string, original: string, improved: string): boolean {
+  const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, ' ').trim();
+  const source = normalize(transcript);
+  const from = normalize(original);
+  const to = normalize(improved);
+
+  if (!from || !source.includes(from)) return false;
+
+  const isModalVerbRepair = /^(should|could|would|might|may|can|must|will|shall)\s+([a-z]+(?:s|es))$/.exec(from);
+  if (isModalVerbRepair) {
+    const base = isModalVerbRepair[2].replace(/(?:es|s)$/i, '');
+    return to === isModalVerbRepair[1] + ' ' + base;
+  }
+
+  const isToVerbRepair = /^to\s+([a-z]+(?:s|es))$/.exec(from);
+  if (isToVerbRepair) {
+    const base = isToVerbRepair[1].replace(/(?:es|s)$/i, '');
+    return to === 'to ' + base;
+  }
+
+  const isIsVerbRepair = /^is\s+([a-z]+)$/.exec(from);
+  if (isIsVerbRepair) {
+    return to === 'is to ' + isIsVerbRepair[1] || to === 'is ' + isIsVerbRepair[1] + 'ing';
+  }
+
+  const auxiliaryRepair = /^(did|didn't|does|doesn't)\s+([a-z]+(?:s|es))$/.exec(from);
+  if (auxiliaryRepair) {
+    const base = auxiliaryRepair[2].replace(/(?:es|s)$/i, '');
+    return to === auxiliaryRepair[1] + ' ' + base;
+  }
+
+  return false;
 }
 
 export async function coachSpeaking(input: SpeakingCoachRequest): Promise<SpeakingCoachResponse> {
@@ -227,32 +264,31 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
     newPhrases: []
   };
 
-  const detectedCorrection = parsed.correction?.original
-    ? { original: String(parsed.correction.original), improved: String(parsed.correction.improved || parsed.correction.original), explanationVi: String(parsed.correction.explanationVi || '') }
+  const modelCorrection = parsed.correction?.original
+    ? {
+        original: String(parsed.correction.original),
+        improved: String(parsed.correction.improved || parsed.correction.original),
+        explanationVi: String(parsed.correction.explanationVi || '')
+      }
     : undefined;
+  const detectedCorrection = modelCorrection && isHighConfidenceCorrection(
+    input.transcript,
+    modelCorrection.original,
+    modelCorrection.improved
+  )
+    ? modelCorrection
+    : undefined;
+
   const shouldVerbMatch = input.transcript.match(/\bshould\s+([a-z]+(?:s|es))\b/i);
   const fallbackCorrection = !detectedCorrection && shouldVerbMatch
-    ? { original: shouldVerbMatch[0], improved: "should " + shouldVerbMatch[1].replace(/(?:es|s)$/i, ''), explanationVi: 'Sau “should”, động từ giữ nguyên mẫu.' }
+    ? {
+        original: shouldVerbMatch[0],
+        improved: "should " + shouldVerbMatch[1].replace(/(?:es|s)$/i, ''),
+        explanationVi: 'Sau “should”, động từ giữ nguyên mẫu.'
+      }
     : undefined;
   const correction = detectedCorrection ?? fallbackCorrection;
-  const recent = (input.recentTurns ?? [])
-    .slice(-4)
-    .map((turn) => `${turn.speaker}: ${turn.text}`)
-    .join('\n');
-  let reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
-  if (correction && !reply.toLowerCase().includes(correction.improved.toLowerCase())) {
-    const followUp = input.scenario.followUpQuestions.find(
-      (question) => !recent.toLowerCase().includes(question.toLowerCase())
-    ) || 'What result would you expect from that?';
-    const naturalReplies = [
-      'That is a practical idea. ' + followUp,
-      'I like that idea. ' + followUp,
-      'That could make a difference. ' + followUp,
-      'Interesting idea. ' + followUp
-    ];
-    const index = Math.abs(input.transcript.length + recent.length) % naturalReplies.length;
-    reply = naturalReplies[index];
-  }
+  const reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
 
   return {
     feedback: {
