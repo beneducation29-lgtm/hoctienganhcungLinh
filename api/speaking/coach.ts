@@ -235,6 +235,10 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
     ? { original: shouldVerbMatch[0], improved: "should " + shouldVerbMatch[1].replace(/(?:es|s)$/i, ''), explanationVi: 'Sau “should”, động từ giữ nguyên mẫu.' }
     : undefined;
   const correction = detectedCorrection ?? fallbackCorrection;
+  const recent = (input.recentTurns ?? [])
+    .slice(-4)
+    .map((turn) => `${turn.speaker}: ${turn.text}`)
+    .join('\n');
   let reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
   if (correction && !reply.toLowerCase().includes(correction.improved.toLowerCase())) {
     const followUp = input.scenario.followUpQuestions.find(
