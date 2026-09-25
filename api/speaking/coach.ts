@@ -94,12 +94,17 @@ Nguyên tắc:
 - Ưu tiên hội thoại tự nhiên hơn chấm điểm.
 - Khen 1 điểm cụ thể, ngắn.
 - Chỉ sửa lỗi rõ ràng và đáng sửa ở trình độ này.
-- Nếu có lỗi ngữ pháp rõ ràng, correction phải chứa đúng 1 lỗi chính.
+- Chỉ tạo correction khi có lỗi ngữ pháp rõ ràng; không sửa câu chỉ vì cách diễn đạt chưa tự nhiên.
+- Không tự biến danh từ/cụm từ hợp lệ thành một cụm khác. "reduce glass", "glass", "glass waste" có thể là ý hợp lệ theo ngữ cảnh.
+- Nếu học sinh dùng câu ngắn như "no use glass", hãy ưu tiên hội thoại tự nhiên; chỉ sửa nếu lỗi ngữ pháp thật sự cản trở hiểu ý.
 - Không tự đoán ý hoặc đổi một từ hợp lệ thành từ khác. "glass" không tự đổi thành "plastic".
 - Nếu câu có nghĩa hợp lý, chấp nhận cách diễn đạt và hỏi tiếp.
 - Nếu câu mơ hồ, hỏi lại nhẹ nhàng.
 - reply: 1 câu ngắn, tối đa 2 câu rất ngắn; không lặp lại nguyên câu học sinh.
 - Chọn follow-up dựa trên nội dung vừa nói; nếu đã trả lời đủ, hỏi một câu mở rộng tự nhiên.
+- Luân phiên kiểu follow-up: hỏi về hành động cụ thể, lý do, lợi ích/kết quả, ví dụ, hoặc ý tưởng khác.
+- Tuyệt đối không lặp lại cùng một câu hỏi follow-up đã xuất hiện trong lịch sử gần nhất.
+- Không mặc định dùng "What could students do first?" nếu câu này đã được dùng.
 - replyVi: 1 câu hỗ trợ tiếng Việt, không dịch từng chữ.
 - newPhrases: tối đa ${input.grade === '10' ? 2 : 3} cụm từ.
 - correction chỉ xuất hiện khi thật sự cần.
@@ -232,7 +237,10 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
   const correction = detectedCorrection ?? fallbackCorrection;
   let reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
   if (correction && !reply.toLowerCase().includes(correction.improved.toLowerCase())) {
-    reply = 'Good idea! Small correction: "' + correction.improved + '" ' + (input.scenario.followUpQuestions[0] || 'What result would you expect from that?');
+    const followUp = input.scenario.followUpQuestions.find(
+      (question) => !recent.toLowerCase().includes(question.toLowerCase())
+    ) || 'What result would you expect from that?';
+    reply = 'Good idea! Small correction: "' + correction.improved + '" ' + followUp;
   }
 
   return {
