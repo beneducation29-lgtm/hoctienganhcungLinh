@@ -31,13 +31,15 @@ interface LessonModalProps {
   onClose: () => void;
   onMarkCompleted: (lessonId: string) => void;
   onStartQuiz?: (title: string, subtitle: string, questions: any[]) => void;
+  onNavigateToSkill?: (skill: 'vocabulary' | 'grammar' | 'speaking' | 'writing') => void;
 }
 
 export const LessonModal: React.FC<LessonModalProps> = ({
   lesson,
   onClose,
   onMarkCompleted,
-  onStartQuiz
+  onStartQuiz,
+  onNavigateToSkill
 }) => {
   if (!lesson) return null;
 
@@ -204,6 +206,27 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             )}
           </div>
         )}
+
+        {/* Lesson Learning Hub roadmap */}
+        <div className="px-6 pt-4">
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Learning Hub · Một vòng học trọn vẹn</div>
+                <p className="text-xs text-slate-600 mt-1">Học ngắn → luyện ngay → kiểm tra → nhận phản hồi → tiếp tục.</p>
+              </div>
+              <Sparkles className="w-5 h-5 text-blue-600 shrink-0" />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[10px] font-semibold">
+              {['Học bài', 'Từ vựng', 'Ngữ pháp', 'Đọc + Nghe', 'Nói AI', 'Viết AI', 'Quiz'].map((step, index) => (
+                <div key={step} className="flex items-center gap-1.5 bg-white/80 border border-white rounded-xl px-2.5 py-2 text-slate-700">
+                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold">{index + 1}</span>
+                  <span>{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Modal Body Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -441,6 +464,15 @@ export const LessonModal: React.FC<LessonModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {onNavigateToSkill && (
+              <div className="w-full sm:w-auto grid grid-cols-2 sm:flex gap-2">
+                <button type="button" onClick={() => onNavigateToSkill('vocabulary')} className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-[11px] rounded-xl cursor-pointer">Từ vựng</button>
+                <button type="button" onClick={() => onNavigateToSkill('grammar')} className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-[11px] rounded-xl cursor-pointer">Ngữ pháp</button>
+                <button type="button" onClick={() => onNavigateToSkill('speaking')} className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold text-[11px] rounded-xl cursor-pointer">Nói AI</button>
+                <button type="button" onClick={() => onNavigateToSkill('writing')} className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-[11px] rounded-xl cursor-pointer">Viết AI</button>
+              </div>
+            )}
+
             {onStartQuiz && (
               <button
                 onClick={() => {
