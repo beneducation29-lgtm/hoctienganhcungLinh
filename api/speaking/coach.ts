@@ -136,6 +136,40 @@ Trả về DUY NHẤT JSON:
 }`;
 }
 
+function isHighConfidenceCorrection(transcript: string, original: string, improved: string): boolean {
+  const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, ' ').trim();
+  const source = normalize(transcript);
+  const from = normalize(original);
+  const to = normalize(improved);
+
+  if (!from || !source.includes(from)) return false;
+
+  const isModalVerbRepair = /^(should|could|would|might|may|can|must|will|shall)\s+([a-z]+(?:s|es))$/.exec(from);
+  if (isModalVerbRepair) {
+    const base = isModalVerbRepair[2].replace(/(?:es|s)$/i, '');
+    return to === isModalVerbRepair[1] + ' ' + base;
+  }
+
+  const isToVerbRepair = /^to\s+([a-z]+(?:s|es))$/.exec(from);
+  if (isToVerbRepair) {
+    const base = isToVerbRepair[1].replace(/(?:es|s)$/i, '');
+    return to === 'to ' + base;
+  }
+
+  const isIsVerbRepair = /^is\s+([a-z]+)$/.exec(from);
+  if (isIsVerbRepair) {
+    return to === 'is to ' + isIsVerbRepair[1] || to === 'is ' + isIsVerbRepair[1] + 'ing';
+  }
+
+  const auxiliaryRepair = /^(did|didn't|does|doesn't)\s+([a-z]+(?:s|es))$/.exec(from);
+  if (auxiliaryRepair) {
+    const base = auxiliaryRepair[2].replace(/(?:es|s)$/i, '');
+    return to === auxiliaryRepair[1] + ' ' + base;
+  }
+
+  return false;
+}
+
 export async function coachSpeaking(input: SpeakingCoachRequest): Promise<SpeakingCoachResponse> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
   if (!apiKey) throw new Error('Speaking configuration error: GEMINI_API_KEY is not configured');
@@ -230,12 +264,28 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
     newPhrases: []
   };
 
-  const detectedCorrection = parsed.correction?.original
-    ? { original: String(parsed.correction.original), improved: String(parsed.correction.improved || parsed.correction.original), explanationVi: String(parsed.correction.explanationVi || '') }
+  const modelCorrection = parsed.correction?.original
+    ? {
+        original: String(parsed.correction.original),
+        improved: String(parsed.correction.improved || parsed.correction.original),
+        explanationVi: String(parsed.correction.explanationVi || '')
+      }
     : undefined;
+  const detectedCorrection = modelCorrection && isHighConfidenceCorrection(
+    input.transcript,
+    modelCorrection.original,
+    modelCorrection.improved
+  )
+    ? modelCorrection
+    : undefined;
+
   const shouldVerbMatch = input.transcript.match(/\bshould\s+([a-z]+(?:s|es))\b/i);
   const fallbackCorrection = !detectedCorrection && shouldVerbMatch
-    ? { original: shouldVerbMatch[0], improved: "should " + shouldVerbMatch[1].replace(/(?:es|s)$/i, ''), explanationVi: 'Sau “should”, động từ giữ nguyên mẫu.' }
+    ? {
+        original: shouldVerbMatch[0],
+        improved: "should " + shouldVerbMatch[1].replace(/(?:es|s)$/i, ''),
+        explanationVi: 'Sau “should”, động từ giữ nguyên mẫu.'
+      }
     : undefined;
   const correction = detectedCorrection ?? fallbackCorrection;
   const reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
