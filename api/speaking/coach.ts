@@ -244,7 +244,14 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
     const followUp = input.scenario.followUpQuestions.find(
       (question) => !recent.toLowerCase().includes(question.toLowerCase())
     ) || 'What result would you expect from that?';
-    reply = 'Good idea! Small correction: "' + correction.improved + '" ' + followUp;
+    const naturalReplies = [
+      'That is a practical idea. ' + followUp,
+      'I like that idea. ' + followUp,
+      'That could make a difference. ' + followUp,
+      'Interesting idea. ' + followUp
+    ];
+    const index = Math.abs(input.transcript.length + recent.length) % naturalReplies.length;
+    reply = naturalReplies[index];
   }
 
   return {
