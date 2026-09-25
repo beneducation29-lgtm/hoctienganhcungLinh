@@ -37,7 +37,12 @@ export async function coachSpeakingWithGemini(input: {
       grade: input.grade,
       cefr: input.cefr,
       mode: input.mode,
-      scenario: input.scenario,
+      scenario: {
+        title: input.scenario.title,
+        topic: input.scenario.topic,
+        prompt: input.scenario.prompt,
+        followUpQuestions: input.scenario.followUpQuestions.slice(0, 2)
+      },
       transcript: input.transcript,
       recentTurns: input.recentTurns.slice(-3).map((turn) => ({
         speaker: turn.speaker,
