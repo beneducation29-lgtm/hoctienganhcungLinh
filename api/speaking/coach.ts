@@ -10,9 +10,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await coachSpeaking(req.body);
     return res.status(200).json(result);
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Speaking AI request failed';
+    const statusMatch = message.match(/\((4\d{2}|5\d{2})\)/);
+    const status = statusMatch ? Number(statusMatch[1]) : 500;
     console.error('[speaking-coach]', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Speaking AI request failed'
+    return res.status(status).json({
+      error: message,
+      diagnostic: 'gemini-request-failed'
     });
   }
 }
