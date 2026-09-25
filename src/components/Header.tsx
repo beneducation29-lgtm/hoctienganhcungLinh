@@ -301,3 +301,33 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             ))}
           </div>
+
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Chuỗi streak: <strong className="text-amber-600">{student.streakDays} ngày</strong></span>
+            {student.email ? (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onLogout();
+                }}
+                className="text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+              >
+                Đăng xuất
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenLogin();
+                }}
+                className="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer"
+              >
+                Đăng nhập Google
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+};
