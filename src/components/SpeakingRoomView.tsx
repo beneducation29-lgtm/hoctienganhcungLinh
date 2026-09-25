@@ -322,7 +322,7 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
                   </div>
                   <div className="flex items-center gap-2 text-xs text-slate-500">
                     <Clock3 className="w-4 h-4" />
-                    Khoảng {profile.suggestedSeconds}s/lượt
+                    <span title="Thời lượng gợi ý cho một lượt luyện nói">~{profile.suggestedSeconds}s/lượt</span>
                   </div>
                 </div>
 
