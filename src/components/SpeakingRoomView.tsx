@@ -185,10 +185,19 @@ export const SpeakingRoomView: React.FC<SpeakingRoomViewProps> = ({ initialGrade
       console.error(error);
       const message = error instanceof Error ? error.message : '';
       const diagnostic = message.match(/Gemini ([a-z0-9_]+) \((\d{3})\)/i);
+      const apiDiagnostic = message.match(/Speaking API HTTP (\d{3})(?: — (.*))?/i);
+      const invalidResponse = message.match(/Speaking API returned invalid response \(HTTP (\d{3})\)/i);
+
       setAiError(
         diagnostic
           ? `AI chưa kết nối được Gemini (${diagnostic[2]} — ${diagnostic[1]}). Mình vẫn cho em luyện bản cơ bản nhé.`
-          : 'AI đang bận một chút. Mình vẫn cho em luyện bản cơ bản nhé.'
+          : apiDiagnostic
+            ? `Speaking API đang lỗi HTTP ${apiDiagnostic[1]}${apiDiagnostic[2] ? ` — ${apiDiagnostic[2]}` : ''}. Mình vẫn cho em luyện bản cơ bản nhé.`
+            : invalidResponse
+              ? `Speaking API trả về dữ liệu không hợp lệ (HTTP ${invalidResponse[1]}). Mình vẫn cho em luyện bản cơ bản nhé.`
+              : message
+                ? `AI chưa phản hồi đúng: ${message.slice(0, 300)}`
+                : 'AI đang bận một chút. Mình vẫn cho em luyện bản cơ bản nhé.'
       );
       const result = evaluateSpeaking(studentText, scenario, profile);
       setFeedback(result);
