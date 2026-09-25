@@ -17,6 +17,7 @@ import { ProgressView } from './components/ProgressView';
 import { VocabularyLabView } from './components/vocabulary/VocabularyLabView';
 import { GrammarLabView } from './components/grammar/GrammarLabView';
 import { SpeakingRoomView } from './components/SpeakingRoomView';
+import { WritingLabView } from './components/writing/WritingLabView';
 
 // Unified Quiz Engine
 import { QuizEngine } from './components/quiz/QuizEngine';
@@ -343,6 +344,10 @@ export default function App() {
 
             {activeTab === 'speaking' && (
               <SpeakingRoomView initialGrade={student.currentGrade} />
+            )}
+
+            {activeTab === 'writing' && (
+              <WritingLabView initialGrade={student.currentGrade} />
             )}
 
             {activeTab === 'skills' && (
