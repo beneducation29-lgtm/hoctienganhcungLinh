@@ -39,7 +39,7 @@ export async function coachSpeakingWithGemini(input: {
       mode: input.mode,
       scenario: input.scenario,
       transcript: input.transcript,
-      recentTurns: input.recentTurns.slice(-6).map((turn) => ({
+      recentTurns: input.recentTurns.slice(-3).map((turn) => ({
         speaker: turn.speaker,
         text: turn.text
       }))
