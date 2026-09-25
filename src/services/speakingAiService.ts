@@ -35,11 +35,14 @@ export async function coachSpeakingWithGemini(input: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       grade: input.grade,
-      cefr: input.cefr,
-      mode: input.mode,
-      scenario: input.scenario,
+      scenario: {
+        title: input.scenario.title,
+        topic: input.scenario.topic,
+        prompt: input.scenario.prompt,
+        followUpQuestions: input.scenario.followUpQuestions.slice(0, 2)
+      },
       transcript: input.transcript,
-      recentTurns: input.recentTurns.slice(-6).map((turn) => ({
+      recentTurns: input.recentTurns.slice(-2).map((turn) => ({
         speaker: turn.speaker,
         text: turn.text
       }))

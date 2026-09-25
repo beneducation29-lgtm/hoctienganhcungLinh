@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 
 export interface SpeakingCoachRequest {
   grade: '10' | '11' | '12';
@@ -9,9 +9,6 @@ export interface SpeakingCoachRequest {
     title: string;
     topic: string;
     prompt: string;
-    promptVi: string;
-    usefulPhrases: string[];
-    vocabulary: string[];
     followUpQuestions: string[];
   };
   transcript: string;
@@ -73,37 +70,39 @@ function extractJson(text: string): unknown {
 function buildPrompt(input: SpeakingCoachRequest): string {
   const support =
     input.grade === '10'
-      ? 'Lớp 10: câu ngắn, tiếng Việt hỗ trợ; 1 lỗi, tối đa 2 cụm từ mới.'
+      ? 'Lớp 10: dễ hiểu, tiếng Việt hỗ trợ, sửa nhẹ.'
       : input.grade === '11'
-        ? 'Lớp 11: cân bằng Anh-Việt; 1 lỗi chính, tối đa 3 cụm từ mới.'
-        : 'Lớp 12: ưu tiên tiếng Anh, luyện thi; tập trung mạch lạc/độ chính xác, tối đa 3 cụm từ mới.';
+        ? 'Lớp 11: cân bằng Anh-Việt, sửa 1 lỗi chính.'
+        : 'Lớp 12: ưu tiên tiếng Anh, tự nhiên và mạch lạc, sửa 1 lỗi chính.';
 
   const recent = (input.recentTurns ?? [])
-    .slice(-4)
+    .slice(-2)
     .map((turn) => `${turn.speaker}: ${turn.text}`)
     .join('\n');
 
-  return `Bạn là Linh, AI English Speaking Buddy cho học sinh THPT Việt Nam.
+  return `Bạn là Linh, AI Speaking Buddy cho học sinh THPT Việt Nam.
 ${support}
-Lớp: ${input.grade}; CEFR: ${input.cefr}; mode: ${input.mode}.
-Chủ đề: ${input.scenario.title} / ${input.scenario.topic}.
-Câu hỏi: ${input.scenario.prompt}
-Gợi ý Việt: ${input.scenario.promptVi}
-Cụm từ: ${input.scenario.usefulPhrases.slice(0, 3).join(', ')}
-Follow-up: ${input.scenario.followUpQuestions.slice(0, 2).join(' | ')}
+Ngữ cảnh: ${input.scenario.title} | ${input.scenario.topic}
+Câu hỏi gốc: ${input.scenario.prompt}
+Follow-up có thể dùng: ${input.scenario.followUpQuestions.slice(0, 2).join(' | ')}
 
-Học sinh: "${input.transcript}"
-Lịch sử gần đây:
+Học sinh vừa nói: "${input.transcript}"
+Lịch sử gần nhất:
 ${recent}
 
-Yêu cầu:
-- Khen 1 điều cụ thể trước.
-- Chỉ sửa 1 điểm quan trọng, không giảng dài.
-- Nếu câu ngắn, hỏi 1 câu nhỏ để mở rộng.
-- reply là câu Linh nói tiếp bằng tiếng Anh, tự nhiên, ngắn.
-- replyVi là hỗ trợ tiếng Việt ngắn.
-- correction chỉ có khi có lỗi đáng sửa.
-- Điểm là tín hiệu tiến bộ, không phải điểm thi.
+Nguyên tắc:
+- Ưu tiên hội thoại tự nhiên hơn chấm điểm.
+- Khen 1 điểm cụ thể, ngắn.
+- Chỉ sửa lỗi rõ ràng và đáng sửa ở trình độ này.
+- Không tự đoán ý hoặc đổi một từ hợp lệ thành từ khác. "glass" không tự đổi thành "plastic".
+- Nếu câu có nghĩa hợp lý, chấp nhận cách diễn đạt và hỏi tiếp.
+- Nếu câu mơ hồ, hỏi lại nhẹ nhàng.
+- reply: 1 câu ngắn, tối đa 2 câu rất ngắn; không lặp lại nguyên câu học sinh.
+- Chọn follow-up dựa trên nội dung vừa nói; nếu đã trả lời đủ, hỏi một câu mở rộng tự nhiên.
+- replyVi: 1 câu hỗ trợ tiếng Việt, không dịch từng chữ.
+- newPhrases: tối đa ${input.grade === '10' ? 2 : 3} cụm từ.
+- correction chỉ xuất hiện khi thật sự cần.
+- Điểm chỉ là tín hiệu tiến bộ.
 
 Trả về DUY NHẤT JSON:
 {
@@ -113,17 +112,17 @@ Trả về DUY NHẤT JSON:
     "grammar": number,
     "fluency": number,
     "overall": number,
-    "praise": "Vietnamese",
-    "oneFix": "Vietnamese",
-    "nextStep": "Vietnamese",
+    "praise": "ngắn",
+    "oneFix": "ngắn",
+    "nextStep": "ngắn",
     "newPhrases": ["string"]
   },
-  "reply": "short English response/question",
+  "reply": "short natural English response",
   "replyVi": "short Vietnamese support",
   "correction": {
     "original": "string",
     "improved": "string",
-    "explanationVi": "short Vietnamese"
+    "explanationVi": "short"
   }
 }`;
 }
@@ -140,9 +139,43 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
       model,
       contents: buildPrompt(input),
       config: {
-        temperature: 0.35,
         responseMimeType: 'application/json',
-        maxOutputTokens: 480,
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            feedback: {
+              type: Type.OBJECT,
+              properties: {
+                clarity: { type: Type.NUMBER },
+                vocabulary: { type: Type.NUMBER },
+                grammar: { type: Type.NUMBER },
+                fluency: { type: Type.NUMBER },
+                overall: { type: Type.NUMBER },
+                praise: { type: Type.STRING },
+                oneFix: { type: Type.STRING },
+                nextStep: { type: Type.STRING },
+                newPhrases: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                }
+              },
+              required: ['clarity', 'vocabulary', 'grammar', 'fluency', 'overall', 'praise', 'oneFix', 'nextStep', 'newPhrases']
+            },
+            reply: { type: Type.STRING },
+            replyVi: { type: Type.STRING },
+            correction: {
+              type: Type.OBJECT,
+              properties: {
+                original: { type: Type.STRING },
+                improved: { type: Type.STRING },
+                explanationVi: { type: Type.STRING }
+              },
+              required: ['original', 'improved', 'explanationVi']
+            }
+          },
+          required: ['feedback', 'reply', 'replyVi']
+        },
+        maxOutputTokens: 320,
         thinkingConfig: { thinkingLevel: 'minimal' }
       }
     });
