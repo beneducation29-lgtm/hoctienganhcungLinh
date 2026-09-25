@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 
 export interface SpeakingCoachRequest {
   grade: '10' | '11' | '12';
@@ -140,6 +140,41 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
       contents: buildPrompt(input),
       config: {
         responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            feedback: {
+              type: Type.OBJECT,
+              properties: {
+                clarity: { type: Type.NUMBER },
+                vocabulary: { type: Type.NUMBER },
+                grammar: { type: Type.NUMBER },
+                fluency: { type: Type.NUMBER },
+                overall: { type: Type.NUMBER },
+                praise: { type: Type.STRING },
+                oneFix: { type: Type.STRING },
+                nextStep: { type: Type.STRING },
+                newPhrases: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                }
+              },
+              required: ['clarity', 'vocabulary', 'grammar', 'fluency', 'overall', 'praise', 'oneFix', 'nextStep', 'newPhrases']
+            },
+            reply: { type: Type.STRING },
+            replyVi: { type: Type.STRING },
+            correction: {
+              type: Type.OBJECT,
+              properties: {
+                original: { type: Type.STRING },
+                improved: { type: Type.STRING },
+                explanationVi: { type: Type.STRING }
+              },
+              required: ['original', 'improved', 'explanationVi']
+            }
+          },
+          required: ['feedback', 'reply', 'replyVi']
+        },
         maxOutputTokens: 320,
         thinkingConfig: { thinkingLevel: 'minimal' }
       }
