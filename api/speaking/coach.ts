@@ -108,6 +108,9 @@ Nguyên tắc:
 - replyVi: 1 câu hỗ trợ tiếng Việt, không dịch từng chữ.
 - newPhrases: tối đa ${input.grade === '10' ? 2 : 3} cụm từ.
 - correction chỉ xuất hiện khi thật sự cần.
+- correction là feedback có cấu trúc, KHÔNG cần xuất hiện trong reply.
+- Tuyệt đối không chèn câu sửa ngữ pháp theo mẫu vào reply.
+- reply phải tự nhiên theo ngữ cảnh và không dùng mẫu cố định chỉ vì có correction.
 - Điểm chỉ là tín hiệu tiến bộ.
 
 Trả về DUY NHẤT JSON:
@@ -235,24 +238,7 @@ export async function coachSpeaking(input: SpeakingCoachRequest): Promise<Speaki
     ? { original: shouldVerbMatch[0], improved: "should " + shouldVerbMatch[1].replace(/(?:es|s)$/i, ''), explanationVi: 'Sau “should”, động từ giữ nguyên mẫu.' }
     : undefined;
   const correction = detectedCorrection ?? fallbackCorrection;
-  const recent = (input.recentTurns ?? [])
-    .slice(-4)
-    .map((turn) => `${turn.speaker}: ${turn.text}`)
-    .join('\n');
-  let reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
-  if (correction && !reply.toLowerCase().includes(correction.improved.toLowerCase())) {
-    const followUp = input.scenario.followUpQuestions.find(
-      (question) => !recent.toLowerCase().includes(question.toLowerCase())
-    ) || 'What result would you expect from that?';
-    const naturalReplies = [
-      'That is a practical idea. ' + followUp,
-      'I like that idea. ' + followUp,
-      'That could make a difference. ' + followUp,
-      'Interesting idea. ' + followUp
-    ];
-    const index = Math.abs(input.transcript.length + recent.length) % naturalReplies.length;
-    reply = naturalReplies[index];
-  }
+  const reply = String(parsed.reply || input.scenario.followUpQuestions[0] || 'Tell me one more thing.');
 
   return {
     feedback: {
