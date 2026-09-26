@@ -391,6 +391,19 @@ export default function App() {
           onClose={() => setActiveLesson(null)}
           onMarkCompleted={handleMarkLessonCompleted}
           onStartQuiz={handleStartQuizPractice}
+          onNavigateToSkill={(skill) => {
+            setActiveLesson(null);
+            if (skill === 'speaking') {
+              setActiveTab('speaking');
+            } else if (skill === 'writing') {
+              setActiveTab('writing');
+            } else if (skill === 'vocabulary') {
+              setActiveTab('vocabulary');
+            } else if (skill === 'grammar') {
+              setActiveTab('grammar');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
       )}
 
