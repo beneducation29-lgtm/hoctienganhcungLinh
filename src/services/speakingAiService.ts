@@ -22,6 +22,8 @@ export interface SpeakingCoachResponse {
 import type { GradeLevel } from '../types/contentArchitecture';
 import type { SpeakingMode, SpeakingScenario, SpeakingTurn } from '../types/speakingRoom';
 
+const SPEAKING_AI_TIMEOUT_MS = 12000;
+
 export async function coachSpeakingWithGemini(input: {
   grade: GradeLevel;
   cefr: string;
@@ -30,11 +32,19 @@ export async function coachSpeakingWithGemini(input: {
   transcript: string;
   recentTurns: SpeakingTurn[];
 }): Promise<SpeakingCoachResponse> {
-  const response = await fetch('/api/speaking/coach', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), SPEAKING_AI_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch('/api/speaking/coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
       grade: input.grade,
+      cefr: input.cefr,
+      mode: input.mode,
       scenario: {
         title: input.scenario.title,
         topic: input.scenario.topic,
@@ -46,8 +56,16 @@ export async function coachSpeakingWithGemini(input: {
         speaker: turn.speaker,
         text: turn.text
       }))
-    })
-  });
+      })
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Speaking AI phản hồi hơi chậm. Mình chuyển sang chế độ luyện nhanh để em không phải chờ.');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   const raw = await response.text();
   let data: Partial<SpeakingCoachResponse> & { error?: string; diagnostic?: string } | null = null;

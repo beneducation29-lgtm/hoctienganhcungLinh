@@ -78,9 +78,9 @@ export const LessonCard: React.FC<LessonCardProps> = ({ lesson, onSelect }) => {
 
         {/* Sections Indicator */}
         <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500">
-          <span className="font-semibold text-slate-700">{lesson.sections.length} phần:</span>
+          <span className="font-semibold text-slate-700">{lesson.sections?.length ?? 0} phần:</span>
           <span className="truncate">
-            {lesson.sections.map((s) => s.title).join(' · ')}
+            {lesson.sections?.map((s) => s.title).join(' · ') || 'Nội dung bài học'}
           </span>
         </div>
       </div>

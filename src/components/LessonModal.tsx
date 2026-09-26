@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X,
   CheckCircle2,
@@ -41,10 +41,8 @@ export const LessonModal: React.FC<LessonModalProps> = ({
   onStartQuiz,
   onNavigateToSkill
 }) => {
-  if (!lesson) return null;
-
-  // Detect if lesson has modular sections (LessonModel)
-  const sections: LessonSection[] = lesson.sections || [];
+  // Hooks must run before the nullable lesson guard so the modal remains stable across lesson changes.
+  const sections: LessonSection[] = lesson?.sections || [];
   const hasSections = sections.length > 0;
 
   // Active section or tab state
@@ -63,6 +61,17 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number | string>>({});
   const [showResults, setShowResults] = useState(false);
+
+  useEffect(() => {
+    setActiveSectionId(sections[0]?.id || 'content');
+    setLegacyTab(
+      lesson?.moduleType === 'vocab' ? 'vocab' : lesson?.moduleType === 'grammar' ? 'grammar' : 'content'
+    );
+    setSelectedAnswers({});
+    setShowResults(false);
+  }, [lesson?.id]);
+
+  if (!lesson) return null;
 
   // Speech API for vocabulary or text
   const handlePlayAudio = (text: string) => {
