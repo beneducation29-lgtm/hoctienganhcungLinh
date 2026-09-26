@@ -5,6 +5,9 @@
   "functions": {
     "api/speaking/coach.ts": {
       "maxDuration": 30
+    },
+    "api/writing/coach.ts": {
+      "maxDuration": 30
     }
   }
 }
