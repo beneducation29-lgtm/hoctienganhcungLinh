@@ -401,6 +401,8 @@ export default function App() {
               setActiveTab('vocabulary');
             } else if (skill === 'grammar') {
               setActiveTab('grammar');
+            } else if (skill === 'reading' || skill === 'listening') {
+              setActiveTab('skills');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
