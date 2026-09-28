@@ -17,7 +17,7 @@ import {
   BookOpenText,
   Layers
 } from 'lucide-react';
-import { Lesson, LessonModel, LessonSection } from '../types';
+import { Lesson, LessonModel, LessonSection, SkillType } from '../types';
 import { VocabularyCard } from './content/VocabularyCard';
 import { GrammarCard } from './content/GrammarCard';
 import { ReadingCard } from './content/ReadingCard';
@@ -31,7 +31,7 @@ interface LessonModalProps {
   onClose: () => void;
   onMarkCompleted: (lessonId: string) => void;
   onStartQuiz?: (title: string, subtitle: string, questions: any[]) => void;
-  onNavigateToSkill?: (skill: 'vocabulary' | 'grammar' | 'speaking' | 'writing') => void;
+  onNavigateToSkill?: (skill: SkillType) => void;
 }
 
 export const LessonModal: React.FC<LessonModalProps> = ({
@@ -52,9 +52,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
   // Legacy tab state for backwards compatibility
   const [legacyTab, setLegacyTab] = useState<'content' | 'vocab' | 'grammar' | 'quiz'>(
-    lesson.moduleType === 'vocab'
+    lesson?.moduleType === 'vocab'
       ? 'vocab'
-      : lesson.moduleType === 'grammar'
+      : lesson?.moduleType === 'grammar'
       ? 'grammar'
       : 'content'
   );
@@ -218,23 +218,105 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
         {/* Lesson Learning Hub roadmap */}
         <div className="px-6 pt-4">
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Learning Hub · Một vòng học trọn vẹn</div>
-                <p className="text-xs text-slate-600 mt-1">Học ngắn → luyện ngay → kiểm tra → nhận phản hồi → tiếp tục.</p>
-              </div>
-              <Sparkles className="w-5 h-5 text-blue-600 shrink-0" />
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[10px] font-semibold">
-              {['Học bài', 'Từ vựng', 'Ngữ pháp', 'Đọc + Nghe', 'Nói AI', 'Viết AI', 'Quiz'].map((step, index) => (
-                <div key={step} className="flex items-center gap-1.5 bg-white/80 border border-white rounded-xl px-2.5 py-2 text-slate-700">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold">{index + 1}</span>
-                  <span>{step}</span>
+          {(() => {
+            const stepForType = (type?: string) => {
+              if (!type) return 1;
+              if (type === 'vocabulary') return 2;
+              if (type === 'grammar') return 3;
+              if (type === 'reading' || type === 'listening') return 4;
+              if (type === 'speaking') return 5;
+              if (type === 'writing') return 6;
+              if (type === 'review') return 7;
+              return 1;
+            };
+
+            const activeStep = stepForType(currentSection?.type);
+            const steps = [
+              { label: 'Học bài', target: 'introduction' },
+              { label: 'Từ vựng', target: 'vocabulary' },
+              { label: 'Ngữ pháp', target: 'grammar' },
+              { label: 'Đọc + Nghe', target: 'reading-listening' },
+              { label: 'Nói AI', target: 'speaking' },
+              { label: 'Viết AI', target: 'writing' },
+              { label: 'Quiz', target: 'review' }
+            ];
+
+            const handleHubStep = (target: string) => {
+              if (target === 'review') {
+                if (onStartQuiz) {
+                  onClose();
+                  import('../services/questionSelector').then(({ questionSelector }) => {
+                    let questions = questionSelector.getQuestionsByLesson(lesson.id);
+                    if (questions.length === 0 && lesson.unitId) {
+                      questions = questionSelector.getQuestionsByUnit(lesson.unitId);
+                    }
+                    if (questions.length === 0) questions = questionSelector.getMixedQuestions(8);
+                    onStartQuiz(
+                      `Luyện tập: ${lesson.title}`,
+                      `Trọn bộ câu hỏi trắc nghiệm tương tác cho bài học ${lesson.title}`,
+                      questions
+                    );
+                  });
+                }
+                return;
+              }
+
+              const section = target === 'reading-listening'
+                ? sections.find((s) => s.type === 'reading' || s.type === 'listening')
+                : sections.find((s) => s.type === target);
+
+              if (section) {
+                setActiveSectionId(section.id);
+                return;
+              }
+
+              if (target === 'speaking' || target === 'writing' || target === 'vocabulary' || target === 'grammar') {
+                onNavigateToSkill?.(target);
+              } else if (target === 'reading-listening') {
+                onNavigateToSkill?.('reading');
+              }
+            };
+
+            return (
+              <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Learning Hub · Một vòng học trọn vẹn</div>
+                    <p className="text-xs text-slate-600 mt-1">Học ngắn → luyện ngay → kiểm tra → nhận phản hồi → tiếp tục.</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <Sparkles className="w-5 h-5 text-blue-600 ml-auto" />
+                    <span className="text-[10px] font-bold text-blue-700">Bước {activeStep}/7</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-[10px] font-semibold">
+                  {steps.map((step, index) => {
+                    const isActive = index + 1 === activeStep;
+                    const isPast = index + 1 < activeStep;
+                    return (
+                      <button
+                        key={step.label}
+                        type="button"
+                        onClick={() => handleHubStep(step.target)}
+                        className={`flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-left border transition-colors cursor-pointer ${
+                          isActive
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : isPast
+                            ? 'bg-white border-blue-100 text-blue-700'
+                            : 'bg-white/80 border-white text-slate-700 hover:border-blue-200 hover:bg-white'
+                        }`}
+                      >
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0 ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
+                        }`}>{index + 1}</span>
+                        <span>{step.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Modal Body Area */}
@@ -491,9 +573,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                     if (questions.length === 0 && lesson.unitId) {
                       questions = questionSelector.getQuestionsByUnit(lesson.unitId);
                     }
-                    if (questions.length === 0) {
-                      questions = questionSelector.getMixedQuestions(8);
-                    }
+                    if (questions.length === 0) questions = questionSelector.getMixedQuestions(8);
                     onStartQuiz(
                       `Luyện tập: ${lesson.title}`,
                       `Trọn bộ câu hỏi trắc nghiệm tương tác cho bài học ${lesson.title}`,
