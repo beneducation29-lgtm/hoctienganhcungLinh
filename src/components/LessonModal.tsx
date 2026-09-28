@@ -52,9 +52,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
   // Legacy tab state for backwards compatibility
   const [legacyTab, setLegacyTab] = useState<'content' | 'vocab' | 'grammar' | 'quiz'>(
-    lesson.moduleType === 'vocab'
+    lesson?.moduleType === 'vocab'
       ? 'vocab'
-      : lesson.moduleType === 'grammar'
+      : lesson?.moduleType === 'grammar'
       ? 'grammar'
       : 'content'
   );
